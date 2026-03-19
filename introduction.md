@@ -233,68 +233,104 @@ A practical framework:
 
 ### Latency Cheat Sheet
 
-| Operation | Approximate Latency |
-|---|---|
-| CPU register access | ~0.3 ns |
-| L1 cache reference | 0.5 ns |
-| Branch misprediction | 5 ns |
-| L2 cache reference | 7 ns |
-| Mutex lock/unlock | 25 ns |
-| L3 cache reference | ~15–40 ns |
-| RAM access (main memory) | 100 ns |
-| Compress 1 KB (Snappy/Zippy) | 3 µs |
-| Send 1 KB over 1 Gbps network | 10 µs |
-| SSD random read (4 KB) | 150 µs |
-| Read 1 MB sequentially from memory | 250 µs |
-| Network round-trip (same datacenter) | 0.5 ms |
-| Read 1 MB sequentially from SSD | 1 ms |
-| HDD seek | 10 ms |
-| Read 1 MB sequentially from HDD | 20 ms |
-| Network round-trip (cross-continent) | 100–150 ms |
+---
+
+#### CPU & Core-Level Latency
+
+| Component          | Subtype              | Latency        | Notes                                  |
+|------------------|----------------------|---------------|----------------------------------------|
+| CPU Instruction  | Simple (ADD, etc.)   | ~0.3 ns       | 1 cycle @ 3–4 GHz                      |
+| CPU Instruction  | Complex (DIV, etc.)  | 3–10 ns       | Multi-cycle                            |
+| Branch Mispred.  | Penalty              | 5–20 ns       | Pipeline flush                         |
+| Syscall          | User → Kernel        | 100–300 ns    | Mode switch                            |
 
 ---
 
-### Throughput / Scale Rules of Thumb
+#### Concurrency & Scheduling
 
-| Metric | Rule of Thumb |
-|---|---|
-| 1 byte | 8 bits |
-| 1 KB | 1,024 bytes |
-| 1 MB | ~1 million bytes |
-| 1 GB | ~1 billion bytes |
-| 1 TB | ~1 trillion bytes |
-| 1 million users (light traffic) | ~10–50 req/sec |
-| Medium web service | ~1K–10K req/sec |
-| Large consumer service | ~100K+ req/sec |
-| Twitter-scale reads | ~300K req/sec |
-| Typical cache lookup (Redis/Memcached) | <1 ms |
-| Typical database query | ~1–10 ms |
-| Typical internal service call | ~10–100 ms |
-| Typical user-facing API latency target | ~50–300 ms |
-| 1 server (async I/O) | ~10K–100K connections |
-| 1 server (thread-per-request) | ~1K–5K connections |
-| 1 TB of text | ~1 billion paragraphs |
-| 1 TB logs | ~5–10 billion log lines |
+| Component          | Subtype              | Latency        | Notes                                  |
+|------------------|----------------------|---------------|----------------------------------------|
+| Mutex Lock       | Uncontended          | 10–30 ns      | Atomic + memory barrier                |
+| Mutex Contention | Spin (user-space)    | 100 ns – 1 μs | Busy wait                              |
+| Mutex Contention | Kernel block         | 1–10 μs+      | Futex + scheduler                      |
+| Context Switch   | Thread               | 1–5 μs        | Cache disruption                       |
+| Context Switch   | Process              | 3–10 μs       | TLB + address space switch             |
 
 ---
 
-### Data Transfer Speeds (Useful for Back-of-the-Napkin Math)
+#### Memory Hierarchy
 
-| Medium | Approximate Throughput |
-|---|---|
-| L1 cache bandwidth | ~1 TB/s |
-| RAM bandwidth | ~20–50 GB/s |
-| NVMe SSD | ~2–7 GB/s |
-| SATA SSD | ~500 MB/s |
-| HDD | ~100–200 MB/s |
-| 1 Gbps network | ~125 MB/s |
-| 10 Gbps network | ~1.25 GB/s |
+| Component         | Subtype              | Latency        | Notes                                  |
+|------------------|----------------------|---------------|----------------------------------------|
+| L1 Cache         | Hit                  | ~0.5 ns       | ~3–5 cycles                            |
+| L2 Cache         | Hit                  | ~7 ns         | Standard reference                     |
+| L3 Cache         | Hit                  | 10–30 ns      | Shared across cores                    |
+| NUMA Access      | Remote memory        | 100–300 ns    | Cross-socket penalty                   |
+| RAM (DDR4/DDR5)  | Random access        | ~100 ns       | Main memory                            |
+| RAM (LPDDR5)     | Mobile               | 80–130 ns     | Power optimized                        |
 
 ---
 
-### Hidden Pattern engineers memorize
+#### GPU & Specialized Memory
 
-ns   → CPU / cache
-µs   → SSD / small network transfer
-ms   → disk / datacenter
-100ms+ → global internet
+| Component            | Subtype          | Latency        | Notes                                  |
+|--------------------|------------------|---------------|----------------------------------------|
+| HBM2/3             | GPU stacks       | 100–150 ns    | High bandwidth                         |
+| GDDR6/6X           | GPU VRAM         | 200–400 ns    | Higher latency than DDR                |
+
+---
+
+#### Storage
+
+| Component        | Subtype              | Latency        | Notes                                  |
+|----------------|----------------------|---------------|----------------------------------------|
+| SSD (NVMe best)| High-end, QD=1       | 10–30 μs      | Ideal conditions                       |
+| SSD (NVMe)     | Typical              | 100–150 μs    | Random read                            |
+| SSD (SATA)     | Consumer             | 100–300 μs    | AHCI overhead                          |
+| SSD (QLC worst)| Sustained write      | 200 μs – 1 ms | Cache exhaustion                       |
+| HDD            | 7200 RPM             | 10–15 ms      | Seek + rotation                        |
+| HDD            | 15K RPM              | 5–8 ms        | Enterprise                             |
+
+---
+
+#### IPC & Serialization
+
+| Component       | Subtype              | Latency        | Notes                                  |
+|----------------|----------------------|---------------|----------------------------------------|
+| IPC            | Shared memory        | ~100 ns       | Fastest IPC                            |
+| IPC            | Pipe/Unix socket     | 1–10 μs       | Kernel mediation                       |
+| Serialization  | JSON                 | 1–50 μs       | Depends on size                        |
+
+---
+
+#### Network Latency
+
+| Scope            | Latency        | Notes                                  |
+|------------------|---------------|----------------------------------------|
+| Loopback         | 0.01–0.05 ms  | Localhost TCP                          |
+| Same rack        | 0.05–0.2 ms   | Top-of-rack switch                     |
+| Same DC          | ~0.5 ms       | RTT                                    |
+| Same region      | 1–10 ms       | Cloud AZs                              |
+| Same country     | 5–30 ms       | ISP routing                            |
+| Cross-continent  | 50–150 ms     | Fiber limits                           |
+| Transoceanic RTT | 120–200 ms    | Physics bound                          |
+
+---
+
+#### Distributed System Reality
+
+| Concept            | Impact           | Notes                                      |
+|--------------------|------------------|--------------------------------------------|
+| Tail Latency (p99) | 2–10× average    | Queueing, GC, retries                      |
+| Retry Amplification| 2–5× latency     | Cascading failures                         |
+| Cold Start         | 10 ms – 1 s      | Serverless / container spin-up             |
+| GC Pause           | 10–100 ms        | JVM / Go spikes                            |
+
+---
+
+#### Mental Model (Must Memorize)
+
+CPU        → 1 ns  
+RAM        → 100 ns (100x slower)  
+SSD        → 100 μs  (1000x slower)
+Network    → 1–100 ms  (1000x slower)
