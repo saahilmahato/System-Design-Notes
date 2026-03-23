@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment Systems Design — Cheatsheet</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --bg2: #13161e;
+    --bg3: #1a1e28;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e2e4ec;
+    --muted: #7a7f96;
+    --dim: #4a4f66;
+    --amber: #f0a500;
+    --amber-dim: rgba(240,165,0,0.12);
+    --teal: #2dd4bf;
+    --teal-dim: rgba(45,212,191,0.1);
+    --coral: #f87171;
+    --coral-dim: rgba(248,113,113,0.1);
+    --blue: #60a5fa;
+    --blue-dim: rgba(96,165,250,0.1);
+    --green: #4ade80;
+    --green-dim: rgba(74,222,128,0.1);
+    --purple: #c084fc;
+    --purple-dim: rgba(192,132,252,0.1);
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13.5px;
+    line-height: 1.65;
+    padding: 0;
+  }
+
+  /* ---- HEADER ---- */
+  .header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border2);
+    padding: 32px 48px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--amber), var(--teal), var(--amber));
+  }
+  .header-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--amber);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+  .header p {
+    color: var(--muted);
+    font-size: 13px;
+    max-width: 600px;
+  }
+  .toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 18px;
+  }
+  .toc a {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--amber);
+    background: var(--amber-dim);
+    border: 1px solid rgba(240,165,0,0.2);
+    padding: 3px 10px;
+    border-radius: 3px;
+    text-decoration: none;
+    letter-spacing: 0.05em;
+    transition: background 0.15s;
+  }
+  .toc a:hover { background: rgba(240,165,0,0.22); }
+
+  /* ---- LAYOUT ---- */
+  .main { padding: 36px 48px; max-width: 1400px; }
+
+  .section { margin-bottom: 48px; }
+  .section-label {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.22em;
+    color: var(--teal);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 20px;
+    letter-spacing: -0.3px;
+  }
+  h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--amber);
+    font-family: var(--mono);
+    letter-spacing: 0.03em;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+
+  /* ---- CARDS / GRIDS ---- */
+  .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .grid-auto { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 18px;
+  }
+  .card-amber { border-left: 3px solid var(--amber); }
+  .card-teal  { border-left: 3px solid var(--teal); }
+  .card-coral { border-left: 3px solid var(--coral); }
+  .card-blue  { border-left: 3px solid var(--blue); }
+  .card-green { border-left: 3px solid var(--green); }
+  .card-purple{ border-left: 3px solid var(--purple); }
+
+  .card h3 { margin-bottom: 6px; font-size: 11px; }
+  .card p { color: var(--muted); font-size: 12.5px; line-height: 1.6; }
+
+  /* ---- TERM ---- */
+  .term-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 12px;
+  }
+  .term {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .term-name {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--teal);
+  }
+  .term-def {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  .term-why {
+    font-size: 11px;
+    color: var(--dim);
+    margin-top: 2px;
+    font-style: italic;
+  }
+
+  /* ---- FLOW DIAGRAM ---- */
+  .flow {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0;
+    overflow-x: auto;
+  }
+  .flow-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 90px;
+  }
+  .flow-box {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 5px;
+    padding: 8px 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text);
+    text-align: center;
+    white-space: nowrap;
+  }
+  .flow-box.amber { border-color: var(--amber); color: var(--amber); background: var(--amber-dim); }
+  .flow-box.teal  { border-color: var(--teal);  color: var(--teal);  background: var(--teal-dim); }
+  .flow-box.coral { border-color: var(--coral); color: var(--coral); background: var(--coral-dim); }
+  .flow-box.blue  { border-color: var(--blue);  color: var(--blue);  background: var(--blue-dim); }
+  .flow-box.green { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+  .flow-label { font-size: 10px; color: var(--dim); text-align: center; }
+
+  .flow-arrow {
+    color: var(--dim);
+    font-size: 18px;
+    padding: 0 4px;
+    margin-bottom: 16px;
+    align-self: center;
+  }
+  .flow-arrow.down { transform: rotate(90deg); }
+
+  /* ---- TABLE ---- */
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+  .compare-table th {
+    background: var(--bg3);
+    color: var(--amber);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border2);
+  }
+  .compare-table td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    vertical-align: top;
+  }
+  .compare-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .compare-table .tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 1px 7px;
+    border-radius: 3px;
+    margin: 1px;
+  }
+  .tag-green  { background: var(--green-dim);  color: var(--green);  border: 1px solid rgba(74,222,128,0.25); }
+  .tag-amber  { background: var(--amber-dim);  color: var(--amber);  border: 1px solid rgba(240,165,0,0.25); }
+  .tag-coral  { background: var(--coral-dim);  color: var(--coral);  border: 1px solid rgba(248,113,113,0.25); }
+  .tag-blue   { background: var(--blue-dim);   color: var(--blue);   border: 1px solid rgba(96,165,250,0.25); }
+  .tag-teal   { background: var(--teal-dim);   color: var(--teal);   border: 1px solid rgba(45,212,191,0.25); }
+
+  /* ---- IDEMPOTENCY ---- */
+  .idem-block {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .idem-block .header-bar {
+    background: rgba(240,165,0,0.08);
+    border-bottom: 1px solid rgba(240,165,0,0.2);
+    padding: 12px 18px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--amber);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .idem-block .header-bar::before {
+    content: '◆';
+    font-size: 9px;
+  }
+  .idem-block .body { padding: 18px; }
+
+  .code-block {
+    background: #0a0c10;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 14px 16px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: #c9d1e2;
+    overflow-x: auto;
+    line-height: 1.7;
+  }
+  .code-block .kw  { color: #c084fc; }
+  .code-block .str { color: #4ade80; }
+  .code-block .cmt { color: #4a5568; font-style: italic; }
+  .code-block .num { color: #f0a500; }
+  .code-block .fn  { color: #60a5fa; }
+
+  /* ---- TRADEOFF BARS ---- */
+  .tradeoff-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 7px;
+    font-size: 11.5px;
+  }
+  .tradeoff-label {
+    color: var(--muted);
+    width: 110px;
+    flex-shrink: 0;
+    font-family: var(--mono);
+    font-size: 10.5px;
+  }
+  .tradeoff-bar-bg {
+    flex: 1;
+    background: var(--bg3);
+    border-radius: 3px;
+    height: 6px;
+    overflow: hidden;
+  }
+  .tradeoff-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+
+  /* ---- PILL BADGES ---- */
+  .badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .badge-amber { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(240,165,0,0.2); }
+  .badge-teal  { background: var(--teal-dim);  color: var(--teal);  border: 1px solid rgba(45,212,191,0.2); }
+  .badge-coral { background: var(--coral-dim); color: var(--coral); border: 1px solid rgba(248,113,113,0.2); }
+
+  /* ---- TRADEOFF PANEL ---- */
+  .tradeoff-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  .tradeoff-cols .col {
+    padding: 14px 16px;
+  }
+  .tradeoff-cols .col:first-child {
+    border-right: 1px solid var(--border);
+  }
+  .tradeoff-cols h4 {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .col-pros h4 { color: var(--green); }
+  .col-cons h4 { color: var(--coral); }
+  .tradeoff-cols li {
+    list-style: none;
+    padding-left: 0;
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 5px;
+    display: flex;
+    gap: 6px;
+  }
+  .tradeoff-cols li::before {
+    flex-shrink: 0;
+    font-size: 10px;
+    margin-top: 2px;
+  }
+  .col-pros li::before { content: '+'; color: var(--green); }
+  .col-cons li::before { content: '−'; color: var(--coral); }
+
+  /* ---- ALERT BOXES ---- */
+  .alert {
+    border-radius: 6px;
+    padding: 13px 16px;
+    font-size: 12.5px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin: 14px 0;
+  }
+  .alert-amber { background: var(--amber-dim); border: 1px solid rgba(240,165,0,0.2); color: #d4a040; }
+  .alert-teal  { background: var(--teal-dim);  border: 1px solid rgba(45,212,191,0.2);  color: var(--teal); }
+  .alert-coral { background: var(--coral-dim); border: 1px solid rgba(248,113,113,0.2); color: var(--coral); }
+  .alert-icon  { font-size: 14px; flex-shrink: 0; margin-top: 0; }
+
+  /* ---- DIVIDER ---- */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 32px 0;
+  }
+
+  /* ---- STEP LIST ---- */
+  .step-list { list-style: none; }
+  .step-list li {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 10px;
+    align-items: flex-start;
+  }
+  .step-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--amber-dim);
+    border: 1px solid rgba(240,165,0,0.3);
+    color: var(--amber);
+    font-family: var(--mono);
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .step-list p { color: var(--muted); font-size: 12.5px; }
+  .step-list strong { color: var(--text); font-weight: 500; }
+
+  /* ---- KEY-VALUE LIST ---- */
+  .kv-list { list-style: none; }
+  .kv-list li {
+    display: flex;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12.5px;
+    align-items: baseline;
+  }
+  .kv-list li:last-child { border-bottom: none; }
+  .kv-key {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--teal);
+    min-width: 150px;
+    flex-shrink: 0;
+  }
+  .kv-val { color: var(--muted); }
+
+  /* ---- SCROLLABLE TABLE WRAPPER ---- */
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg2);
+  }
+
+  @media (max-width: 900px) {
+    .main { padding: 24px 20px; }
+    .header { padding: 24px 20px; }
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    .tradeoff-cols { grid-template-columns: 1fr; }
+    .tradeoff-cols .col:first-child { border-right: none; border-bottom: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================================================================ HEADER -->
+<div class="header">
+  <div class="header-label">System Design Reference</div>
+  <h1>Payment Systems — Design Cheatsheet</h1>
+  <p>A field guide covering architecture patterns, technical jargon, tradeoffs, idempotency, and everything you need to design a production-grade payment system.</p>
+  <div class="toc">
+    <a href="#flow">Request Flow</a>
+    <a href="#jargon">Jargon Glossary</a>
+    <a href="#idempotency">Idempotency</a>
+    <a href="#consistency">Consistency</a>
+    <a href="#databases">Databases</a>
+    <a href="#queues">Message Queues</a>
+    <a href="#security">Security & PCI-DSS</a>
+    <a href="#retries">Retries & Resilience</a>
+    <a href="#observability">Observability</a>
+    <a href="#hld">HLD Overview</a>
+  </div>
+</div>
+
+<!-- ================================================================ MAIN -->
+<div class="main">
+
+<!-- =================== SECTION 1: PAYMENT FLOW -->
+<div class="section" id="flow">
+  <div class="section-label">01 — Architecture</div>
+  <h2>End-to-End Payment Request Flow</h2>
+
+  <div class="flow">
+    <div class="flow-step">
+      <div class="flow-box amber">Customer</div>
+      <div class="flow-label">Browser / App</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="flow-box teal">Merchant App</div>
+      <div class="flow-label">Frontend + Backend</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="flow-box blue">Payment Gateway</div>
+      <div class="flow-label">Tokenize, Route</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="flow-box blue">Payment Processor</div>
+      <div class="flow-label">Stripe, Adyen, etc.</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="flow-box coral">Card Network</div>
+      <div class="flow-label">Visa / MC / Amex</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="flow-box coral">Issuing Bank</div>
+      <div class="flow-label">Approves / Declines</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="flow-box green">Authorization</div>
+      <div class="flow-label">Funds Reserved</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="flow-box green">Settlement</div>
+      <div class="flow-label">T+1 or T+2</div>
+    </div>
+  </div>
+
+  <div class="grid-3" style="margin-top: 18px;">
+    <div class="card card-amber">
+      <h3>Authorization</h3>
+      <p>Issuing bank validates the card and <em>reserves</em> funds (hold). Money has NOT moved yet. Typical window: 5–7 days. If not captured, the hold expires automatically.</p>
+    </div>
+    <div class="card card-teal">
+      <h3>Capture</h3>
+      <p>Merchant requests actual transfer of reserved funds. Happens during fulfillment. Can be full or partial. Can be done days later within the auth window.</p>
+    </div>
+    <div class="card card-coral">
+      <h3>Settlement</h3>
+      <p>Batch process (T+1 or T+2) where the acquirer collects funds from card networks, deducting interchange fees, and deposits net amount into merchant's account.</p>
+    </div>
+    <div class="card card-blue">
+      <h3>Refund vs Reversal</h3>
+      <p><strong>Reversal:</strong> voids an auth before capture — no money moves. <strong>Refund:</strong> a new credit transaction after settlement. Chargebacks override both.</p>
+    </div>
+    <div class="card card-green">
+      <h3>Chargeback</h3>
+      <p>Customer disputes a charge directly with their bank. Bank reclaims funds from merchant. Extremely costly — merchants pay $15–$100 in fees per chargeback regardless of outcome.</p>
+    </div>
+    <div class="card card-purple">
+      <h3>Interchange Fee</h3>
+      <p>Fee paid by acquiring bank to issuing bank per transaction. Set by card networks. Typically 1.5–3.5%. Hidden from merchants — they pay a blended Merchant Discount Rate (MDR).</p>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- =================== SECTION 2: JARGON GLOSSARY -->
+<div class="section" id="jargon">
+  <div class="section-label">02 — Terminology</div>
+  <h2>Technical Jargon Glossary</h2>
+
+  <div class="term-grid">
+    <div class="term">
+      <div class="term-name">PSP — Payment Service Provider</div>
+      <div class="term-def">All-in-one provider combining gateway + processor + merchant account. Examples: Stripe, PayPal, Square. Simplifies integration but increases vendor lock-in.</div>
+      <div class="term-why">Why: Faster time-to-market for startups. FAANG-scale companies build in-house or use direct integrations for cost savings at volume.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Payment Gateway</div>
+      <div class="term-def">Secure endpoint that encrypts card data, validates format, and routes transactions to the appropriate processor. Entry point for payment data into the financial network.</div>
+      <div class="term-why">Why: Separates the merchant from handling raw card data — critical for PCI-DSS scope reduction.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Acquirer / Acquiring Bank</div>
+      <div class="term-def">Bank that holds the merchant's account and processes card transactions on behalf of the merchant. Settles funds into the merchant's bank account.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Issuer / Issuing Bank</div>
+      <div class="term-def">Bank that issued the customer's card (e.g., Chase, Citi). Authorizes or declines transactions. Holds customer's funds and enforces credit limits.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Tokenization</div>
+      <div class="term-def">Replace sensitive card data (PAN) with a non-sensitive surrogate value (token). Network tokens (by Visa/MC) also include domain restrictions making them useless if stolen.</div>
+      <div class="term-why">Why: Reduces PCI-DSS scope. Tokens can be stored in your DB safely. Original PAN never touches your servers.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">PAN — Primary Account Number</div>
+      <div class="term-def">The 16-digit card number. Handling raw PANs requires full PCI-DSS compliance (SAQ D or ROC). Avoid touching PANs at all costs.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">CVV / CVV2</div>
+      <div class="term-def">3–4 digit security code. PCI-DSS strictly forbids storing CVV post-authorization, even encrypted. Can only be transmitted at time of transaction.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">3DS / 3D Secure</div>
+      <div class="term-def">Additional authentication layer (redirect or in-app challenge) by the issuing bank. 3DS2 is frictionless for low-risk transactions. Shifts fraud liability to the issuer.</div>
+      <div class="term-why">Why: Liability shift is key — if 3DS passes and fraud occurs, the bank (not you) eats the chargeback.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Idempotency Key</div>
+      <div class="term-def">Unique client-generated ID attached to each payment request. Server returns same response for duplicate requests without re-executing. Prevents double charges on retries.</div>
+      <div class="term-why">Why: Network is unreliable. Client must retry — but payment should execute exactly once.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Webhook / Callback</div>
+      <div class="term-def">HTTP POST from payment provider to your server when an async event occurs (payment succeeded, refund created). Async complement to polling. Must be idempotent.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Outbox Pattern</div>
+      <div class="term-def">Write events to an outbox table in the same DB transaction as the business record. A separate process polls and publishes these events. Ensures at-least-once delivery.</div>
+      <div class="term-why">Why: Eliminates dual-write problem between DB and message queue. Critical for financial consistency.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Dual-Write Problem</div>
+      <div class="term-def">Writing to a DB and a message queue in two separate operations — one can succeed while the other fails. No atomic guarantee. Never do this for financial data.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Saga Pattern</div>
+      <div class="term-def">Sequence of local transactions, each publishing an event. Compensating transactions roll back on failure. Two flavors: choreography (event-driven) and orchestration (central coordinator).</div>
+      <div class="term-why">Why: Distributed transactions (2PC) are too slow and brittle. Saga enables eventual consistency across microservices.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Distributed Transaction (2PC)</div>
+      <div class="term-def">Two-Phase Commit: prepare phase (all participants lock resources) then commit phase. Guarantees atomicity across services. Problem: coordinator failure leaves participants in limbo (blocking).</div>
+      <div class="term-why">Avoid in payments: too slow, locks held for the duration, single coordinator SPOF.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">At-Least-Once Delivery</div>
+      <div class="term-def">Message queue guarantee: message will be delivered at minimum once. May be delivered more. Consumer must handle duplicates — this is why idempotency is mandatory.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Exactly-Once Semantics</div>
+      <div class="term-def">Messages are processed exactly once. Achieved by combining idempotent consumers + transactional outbox (not a native queue feature). True exactly-once is expensive — simulate via deduplication.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Ledger (Double-Entry)</div>
+      <div class="term-def">Every financial transaction creates two entries: a debit on one account and a credit on another. Sum of all entries = 0. Immutable audit trail. Foundation of accounting and payment systems.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Wallet / Virtual Account</div>
+      <div class="term-def">Logical balance stored in your DB. Not a real bank account. Common in platforms (Airbnb, Uber). Funds held in a pooled bank account with internal ledger tracking per-user balances.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Rate Limiting / Velocity Check</div>
+      <div class="term-def">Fraud prevention: limit payment attempts per card/IP/user in a time window. Token bucket or sliding window algorithm. Blocks card testing attacks (trying many cards quickly).</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Reconciliation</div>
+      <div class="term-def">Process of comparing your internal ledger against processor/bank statements to find discrepancies. Run daily or per-batch. Discrepancies trigger manual review or automated correction.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">ACID Transactions</div>
+      <div class="term-def">Atomicity, Consistency, Isolation, Durability. Database guarantee for local transactions. Essential for ledger writes. Cannot span multiple services without distributed transaction protocols.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Optimistic Locking</div>
+      <div class="term-def">Read a version number with the record, write with WHERE version = N. If another process updated concurrently, write fails — caller retries. Low contention = fast. High contention = many retries.</div>
+      <div class="term-why">Why: Avoid database row locks for balance updates. Pessimistic locking (SELECT FOR UPDATE) serializes writes and can deadlock.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Eventual Consistency</div>
+      <div class="term-def">System guarantee that, absent new updates, all replicas will converge to the same value. Acceptable for non-critical reads (balance display) but not for write operations (debit/credit).</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Circuit Breaker</div>
+      <div class="term-def">Wrapper around external service calls (processor, bank API). States: Closed (normal) → Open (stop calls after N failures) → Half-Open (probe to check recovery). Prevents cascade failures.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Escrow / Hold</div>
+      <div class="term-def">Funds held in a third-party or platform-controlled account pending fulfillment of conditions. Common in marketplaces. Protects both buyer (until delivery) and seller (from chargebacks post-payout).</div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- =================== SECTION 3: IDEMPOTENCY -->
+<div class="section" id="idempotency">
+  <div class="section-label">03 — Core Concept</div>
+  <h2>Idempotency — Deep Dive</h2>
+
+  <div class="alert alert-amber">
+    <span class="alert-icon">⚠</span>
+    <span><strong>Why it's non-negotiable in payments:</strong> Networks fail. Clients timeout and retry. Without idempotency, a retry = a double charge. In payments, a double charge is a legal and reputational catastrophe.</span>
+  </div>
+
+  <div class="idem-block" style="margin-bottom: 18px;">
+    <div class="header-bar">What is Idempotency?</div>
+    <div class="body">
+      <p style="color: var(--muted); font-size: 13px; line-height: 1.7; margin-bottom: 14px;">
+        An operation is <strong style="color: var(--text)">idempotent</strong> if applying it multiple times has the same effect as applying it once. Formally: <code style="font-family: var(--mono); font-size: 11px; color: var(--teal); background: var(--bg3); padding: 2px 6px; border-radius: 3px;">f(f(x)) = f(x)</code>
+      </p>
+      <p style="color: var(--muted); font-size: 13px; line-height: 1.7; margin-bottom: 14px;">
+        In HTTP terms: GET, PUT, DELETE are idempotent by spec. POST is not. Payment creation is a POST — you must manually enforce idempotency using an <strong style="color: var(--text)">Idempotency Key</strong>.
+      </p>
+      <div class="code-block">
+<span class="cmt">// Client: generate a UUID per payment attempt, NOT per retry</span>
+<span class="kw">POST</span> /payments
+<span class="str">Idempotency-Key: <span class="num">550e8400-e29b-41d4-a716-446655440000</span></span>
+Content-Type: application/json
+
+{
+  <span class="str">"amount"</span>: <span class="num">9999</span>,
+  <span class="str">"currency"</span>: <span class="str">"USD"</span>,
+  <span class="str">"payment_method_id"</span>: <span class="str">"pm_abc123"</span>
+}
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <div class="idem-block">
+        <div class="header-bar">How the Server Handles It</div>
+        <div class="body">
+          <ul class="step-list">
+            <li>
+              <div class="step-num">1</div>
+              <p><strong>Extract Key</strong> — Read <code style="font-family: var(--mono); font-size: 11px; color: var(--teal);">Idempotency-Key</code> header from request. Scope it to the user: <code style="font-family: var(--mono); font-size: 10.5px; color: var(--muted);">(user_id, idempotency_key)</code></p>
+            </li>
+            <li>
+              <div class="step-num">2</div>
+              <p><strong>Check Cache / DB</strong> — Look up the key in a dedicated idempotency table. If found and status is COMPLETE, return the cached response immediately. No re-execution.</p>
+            </li>
+            <li>
+              <div class="step-num">3</div>
+              <p><strong>Lock / Reserve</strong> — If found but status is IN_PROGRESS (concurrent duplicate), return 409 Conflict or wait. Prevents concurrent execution of the same key.</p>
+            </li>
+            <li>
+              <div class="step-num">4</div>
+              <p><strong>Execute &amp; Store</strong> — If not found, insert the key (UPSERT with ON CONFLICT DO NOTHING), execute the payment, then store the full response alongside the key atomically in a DB transaction.</p>
+            </li>
+            <li>
+              <div class="step-num">5</div>
+              <p><strong>TTL / Expiry</strong> — Keys expire after 24h–7 days. After expiry, same key is treated as a new request. Stripe uses 24 hours.</p>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="idem-block" style="margin-bottom: 14px;">
+        <div class="header-bar">Idempotency Key — Design Rules</div>
+        <div class="body">
+          <ul class="kv-list">
+            <li><span class="kv-key">Generated by</span><span class="kv-val">Client, not server. Server assigns IDs after processing — client generates the key before sending.</span></li>
+            <li><span class="kv-key">Format</span><span class="kv-val">UUID v4. Random. Globally unique. Not sequential (predictable = guessable = exploitable).</span></li>
+            <li><span class="kv-key">Scope</span><span class="kv-val">Scoped per user + operation type. Never reuse across different operations. One key = one intent.</span></li>
+            <li><span class="kv-key">Regenerate when</span><span class="kv-val">User explicitly retries after a definitive failure. Do NOT regenerate on network timeout (you don't know if it processed).</span></li>
+            <li><span class="kv-key">Storage</span><span class="kv-val">Dedicated <code style="font-family: var(--mono); font-size: 11px; color: var(--teal);">idempotency_keys</code> table, OR Redis with TTL. If Redis, use a fallback DB for persistence across restarts.</span></li>
+            <li><span class="kv-key">DB Schema</span><span class="kv-val"><code style="font-family: var(--mono); font-size: 10.5px; color: var(--muted);">(user_id, key) UNIQUE INDEX</code> + status + response_body + created_at + expires_at</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="idem-block">
+        <div class="header-bar">Idempotency Key — Schema Example</div>
+        <div class="body">
+          <div class="code-block">
+<span class="kw">CREATE TABLE</span> idempotency_keys (
+  id          UUID <span class="kw">PRIMARY KEY DEFAULT</span> <span class="fn">gen_random_uuid()</span>,
+  user_id     UUID <span class="kw">NOT NULL</span>,
+  key         TEXT <span class="kw">NOT NULL</span>,
+  status      TEXT <span class="kw">NOT NULL DEFAULT</span> <span class="str">'processing'</span>,
+  <span class="cmt">-- 'processing' | 'complete' | 'failed'</span>
+  response    JSONB,
+  created_at  TIMESTAMPTZ <span class="kw">NOT NULL DEFAULT NOW()</span>,
+  expires_at  TIMESTAMPTZ <span class="kw">NOT NULL</span>,
+  <span class="kw">UNIQUE</span>(user_id, key)
+);
+<span class="cmt">-- Use UPSERT on INSERT conflict to detect duplicates</span>
+<span class="kw">INSERT INTO</span> idempotency_keys (user_id, key, expires_at)
+<span class="kw">VALUES</span> ($1, $2, <span class="fn">NOW()</span> + <span class="str">'24 hours'</span>)
+<span class="kw">ON CONFLICT DO NOTHING</span>
+<span class="kw">RETURNING</span> id;
+<span class="cmt">-- If no row returned → key exists → fetch and return cached response</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-3" style="margin-top: 16px;">
+    <div class="card card-coral">
+      <h3>Common Mistake #1</h3>
+      <p><strong>Regenerating the key on timeout.</strong> If your POST timed out, you don't know if it was processed. Reuse the same key. Only generate a new key when the user explicitly wants a fresh attempt.</p>
+    </div>
+    <div class="card card-coral">
+      <h3>Common Mistake #2</h3>
+      <p><strong>Key scoped globally without user.</strong> Two users could inadvertently generate the same UUID (extremely unlikely but possible). Always namespace: <code style="font-family: var(--mono); color: var(--muted);">user_id + key</code>.</p>
+    </div>
+    <div class="card card-coral">
+      <h3>Common Mistake #3</h3>
+      <p><strong>Not storing the full response.</strong> On a duplicate request, return exactly the same HTTP status + body. If you re-run business logic even partially, you've broken idempotency.</p>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- =================== SECTION 4: CONSISTENCY PATTERNS -->
+<div class="section" id="consistency">
+  <div class="section-label">04 — Consistency</div>
+  <h2>Consistency Patterns &amp; Distributed Transactions</h2>
+
+  <div class="grid-2">
+    <div>
+      <div class="card" style="border-left: 3px solid var(--amber); margin-bottom: 14px;">
+        <h3>ACID — Local Transactions</h3>
+        <ul class="kv-list" style="margin-top: 8px;">
+          <li><span class="kv-key">Atomicity</span><span class="kv-val">All operations in a transaction succeed, or all are rolled back. Never partial state.</span></li>
+          <li><span class="kv-key">Consistency</span><span class="kv-val">Transaction brings DB from one valid state to another. Constraints enforced.</span></li>
+          <li><span class="kv-key">Isolation</span><span class="kv-val">Concurrent transactions appear sequential (levels: Read Uncommitted → Serializable).</span></li>
+          <li><span class="kv-key">Durability</span><span class="kv-val">Committed transaction persists even after crash. WAL (Write-Ahead Log) ensures this.</span></li>
+        </ul>
+        <p style="margin-top: 10px; color: var(--dim); font-size: 11.5px; font-style: italic;">Use Serializable isolation for balance updates. READ COMMITTED is default but allows non-repeatable reads.</p>
+      </div>
+
+      <div class="card" style="border-left: 3px solid var(--coral);">
+        <h3>2PC — Two-Phase Commit</h3>
+        <p style="margin-bottom: 10px;">Coordinator tells all participants to <strong>prepare</strong> (lock resources). If all OK, sends <strong>commit</strong>. If any fail, sends <strong>rollback</strong>.</p>
+        <div class="tradeoff-cols" style="border: 1px solid var(--border); border-radius: 5px; overflow: hidden;">
+          <div class="col col-pros">
+            <h4>Pros</h4>
+            <ul>
+              <li>True atomic commit across nodes</li>
+              <li>Familiar, widely supported</li>
+            </ul>
+          </div>
+          <div class="col col-cons">
+            <h4>Cons</h4>
+            <ul>
+              <li>Coordinator SPOF</li>
+              <li>Blocking — locks held during both phases</li>
+              <li>Terrible under partition (network split)</li>
+              <li>Not supported by most NoSQL</li>
+            </ul>
+          </div>
+        </div>
+        <p style="margin-top: 10px; color: var(--dim); font-size: 11.5px; font-style: italic;">Verdict: avoid in microservices. Use Saga instead.</p>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="border-left: 3px solid var(--teal);">
+        <h3>Saga Pattern</h3>
+        <p style="margin-bottom: 12px; color: var(--muted);">Long-lived business transactions broken into a sequence of local transactions, each with a compensating transaction to undo on failure.</p>
+
+        <div style="background: var(--bg3); border-radius: 5px; padding: 14px; margin-bottom: 12px;">
+          <div style="font-family: var(--mono); font-size: 10.5px; color: var(--teal); margin-bottom: 8px;">CHOREOGRAPHY SAGA (event-driven)</div>
+          <p style="color: var(--muted); font-size: 12px; line-height: 1.6;">Each service listens for events and emits its own. No central coordinator. Scales well. Harder to debug — no single trace of the whole saga.</p>
+        </div>
+
+        <div style="background: var(--bg3); border-radius: 5px; padding: 14px; margin-bottom: 12px;">
+          <div style="font-family: var(--mono); font-size: 10.5px; color: var(--amber); margin-bottom: 8px;">ORCHESTRATION SAGA (central coordinator)</div>
+          <p style="color: var(--muted); font-size: 12px; line-height: 1.6;">A Saga Orchestrator (e.g., Step Functions, Temporal.io) tells each service what to do. Single source of truth. Easier to monitor. Coordinator can become SPOF if not HA.</p>
+        </div>
+
+        <div style="background: var(--bg3); border-radius: 5px; padding: 14px;">
+          <div style="font-family: var(--mono); font-size: 10.5px; color: var(--coral); margin-bottom: 6px;">PAYMENT SAGA EXAMPLE</div>
+          <ol style="color: var(--muted); font-size: 11.5px; padding-left: 16px; line-height: 1.9;">
+            <li>Reserve inventory → emit InventoryReserved</li>
+            <li>Charge payment → emit PaymentProcessed</li>
+            <li>Create shipment → emit ShipmentCreated</li>
+            <li>Confirm order → done</li>
+          </ol>
+          <p style="color: var(--dim); font-size: 11.5px; margin-top: 8px; font-style: italic;">If step 3 fails: compensate step 2 (issue refund), compensate step 1 (release inventory).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert alert-teal" style="margin-top: 16px;">
+    <span class="alert-icon">◈</span>
+    <span><strong>Interview tip:</strong> "Why not 2PC?" → Blocking, coordinator SPOF, lock contention at scale. "How do Sagas handle isolation?" → They don't provide ACID isolation. Use semantic locking, process pivots, or sequence ordering to prevent dirty reads across saga steps.</span>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- =================== SECTION 5: DATABASES -->
+<div class="section" id="databases">
+  <div class="section-label">05 — Storage</div>
+  <h2>Database Selection &amp; Tradeoffs</h2>
+
+  <div class="table-wrap">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Database</th>
+          <th>Type</th>
+          <th>ACID</th>
+          <th>Scale Model</th>
+          <th>Best For in Payments</th>
+          <th>Watch Out</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong style="color: var(--blue);">PostgreSQL</strong></td>
+          <td>Relational</td>
+          <td><span class="tag tag-green">Full</span></td>
+          <td>Vertical + Read Replicas</td>
+          <td>Ledger, transactions, idempotency table, audit log. Default choice.</td>
+          <td>Horizontal write scaling is hard. Use Citus or partition for scale.</td>
+        </tr>
+        <tr>
+          <td><strong style="color: var(--teal);">CockroachDB</strong></td>
+          <td>Distributed SQL</td>
+          <td><span class="tag tag-green">Serializable</span></td>
+          <td>Horizontal (multi-region)</td>
+          <td>Global payments, multi-region ACID, geo-partitioned data residency.</td>
+          <td>Higher latency vs single-node Postgres. Serializable = slower than SI.</td>
+        </tr>
+        <tr>
+          <td><strong style="color: var(--amber);">DynamoDB</strong></td>
+          <td>Key-Value / Wide Column</td>
+          <td><span class="tag tag-amber">Conditional Writes</span></td>
+          <td>Horizontal (AWS-managed)</td>
+          <td>Idempotency keys (TTL native), session state, high-throughput token lookups.</td>
+          <td>No joins, no multi-item ACID without transactions API (slow). Single-table design is complex.</td>
+        </tr>
+        <tr>
+          <td><strong style="color: var(--coral);">MongoDB</strong></td>
+          <td>Document</td>
+          <td><span class="tag tag-amber">Multi-doc Txn (v4+)</span></td>
+          <td>Horizontal sharding</td>
+          <td>Flexible schema for payment metadata, product catalogs. NOT for ledger.</td>
+          <td>Multi-doc transactions are expensive. Avoid for core financial data.</td>
+        </tr>
+        <tr>
+          <td><strong style="color: var(--purple);">Redis</strong></td>
+          <td>In-Memory KV</td>
+          <td><span class="tag tag-coral">None (persisted)</span></td>
+          <td>Horizontal clustering</td>
+          <td>Idempotency key TTL cache, rate limiting (token bucket), session, hot wallet balance cache.</td>
+          <td>Not durable by default. Never as the single source of truth for financial data.</td>
+        </tr>
+        <tr>
+          <td><strong style="color: var(--green);">ClickHouse</strong></td>
+          <td>OLAP (Columnar)</td>
+          <td><span class="tag tag-coral">Eventual</span></td>
+          <td>Horizontal</td>
+          <td>Fraud analytics, transaction reporting, reconciliation aggregations.</td>
+          <td>Optimized for reads, not OLTP writes. Not for transactional use.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid-2" style="margin-top: 16px;">
+    <div class="card card-amber">
+      <h3>Ledger Design Rule</h3>
+      <p>Ledger tables are <strong>append-only</strong>. Never UPDATE a ledger row. Every correction is a new compensating entry. Balance = <code style="font-family: var(--mono); font-size: 11px; color: var(--teal);">SUM(credits) - SUM(debits)</code> computed at read time or materialized in a balance snapshot table.</p>
+    </div>
+    <div class="card card-teal">
+      <h3>Balance Snapshot Strategy</h3>
+      <p>Running SUM on millions of ledger rows is slow. Periodically write a <strong>balance checkpoint</strong>: <code style="font-family: var(--mono); font-size: 11px; color: var(--teal);">(account_id, balance, as_of_sequence_id)</code>. Then SUM only entries after that checkpoint. Dramatically faster reads.</p>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- =================== SECTION 6: MESSAGE QUEUES -->
+<div class="section" id="queues">
+  <div class="section-label">06 — Async Processing</div>
+  <h2>Message Queue Comparison</h2>
+
+  <div class="table-wrap">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Queue</th>
+          <th>Model</th>
+          <th>Delivery</th>
+          <th>Ordering</th>
+          <th>Retention</th>
+          <th>Best For</th>
+          <th>Avoid When</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong style="color: var(--amber);">Kafka</strong></td>
+          <td>Log (pub/sub)</td>
+          <td><span class="tag tag-amber">At-Least-Once</span></td>
+          <td>Per partition</td>
+          <td>Days–forever</td>
+          <td>Audit log, event sourcing, replay, high-throughput payment events, exactly-once with idempotent producer.</td>
+          <td>Simple job queues. Requires Zookeeper/KRaft; ops overhead.</td>
+        </tr>
+        <tr>
+          <td><strong style="color: var(--blue);">SQS</strong></td>
+          <td>Queue (point-to-point)</td>
+          <td><span class="tag tag-amber">At-Least-Once</span></td>
+          <td>None (FIFO queue: yes)</td>
+          <td>14 days max</td>
+          <td>AWS-native workloads, async payment processing, dead-letter queues for failures.</td>
+          <td>Event fan-out to multiple consumers. No replay after delete.</td>
+        </tr>
+        <tr>
+          <td><strong style="color: var(--green);">RabbitMQ</strong></td>
+          <td>Broker (AMQP)</td>
+          <td><span class="tag tag-teal">At-Most or At-Least</span></td>
+          <td>Per queue</td>
+          <td>Until consumed</td>
+          <td>Complex routing (topic, fanout, header exchanges), low-latency task queues.</td>
+          <td>High-volume durable log. No replay of consumed messages.</td>
+        </tr>
+        <tr>
+          <td><strong style="color: var(--coral);">Outbox + CDC</strong></td>
+          <td>DB-native</td>
+          <td><span class="tag tag-green">At-Least-Once</span></td>
+          <td>Sequence ID order</td>
+          <td>DB retention</td>
+          <td>Financial events that must be consistent with DB writes. Debezium + Kafka pattern.</td>
+          <td>Very-high throughput (DB polling is slower than native queue).</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="alert alert-amber" style="margin-top: 16px;">
+    <span class="alert-icon">◈</span>
+    <span><strong>Key interview point:</strong> All queues give at-least-once. Your consumers must always be idempotent. Never assume a message is delivered exactly once. The outbox pattern is the gold standard for financial events because it eliminates the dual-write problem — the queue publish is derived from a DB poll, not a separate write.</span>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- =================== SECTION 7: SECURITY + PCI-DSS -->
+<div class="section" id="security">
+  <div class="section-label">07 — Security &amp; Compliance</div>
+  <h2>Security, PCI-DSS &amp; Data Protection</h2>
+
+  <div class="grid-2">
+    <div>
+      <div class="card" style="border-left: 3px solid var(--amber); margin-bottom: 14px;">
+        <h3>PCI-DSS Compliance Levels</h3>
+        <ul class="kv-list" style="margin-top: 8px;">
+          <li><span class="kv-key">Level 1</span><span class="kv-val">&gt;6M Visa transactions/year. Annual Report on Compliance (ROC) by QSA. Most rigorous.</span></li>
+          <li><span class="kv-key">Level 2</span><span class="kv-val">1–6M transactions/year. Annual self-assessment questionnaire (SAQ).</span></li>
+          <li><span class="kv-key">Level 3/4</span><span class="kv-val">&lt;1M/year. SAQ + quarterly vulnerability scans.</span></li>
+          <li><span class="kv-key">SAQ A</span><span class="kv-val">Card data handled entirely by third party (Stripe.js/Elements). Minimal scope. Most startups aim for this.</span></li>
+          <li><span class="kv-key">SAQ D</span><span class="kv-val">You store, process, or transmit cardholder data yourself. Full compliance required. Extremely costly.</span></li>
+        </ul>
+      </div>
+
+      <div class="card" style="border-left: 3px solid var(--teal);">
+        <h3>PCI Scope Reduction Strategy</h3>
+        <p style="margin-bottom: 10px;">The goal: never let raw card data touch your servers.</p>
+        <ol style="color: var(--muted); font-size: 12.5px; padding-left: 18px; line-height: 1.9;">
+          <li>Use <strong style="color: var(--text);">Stripe.js / Adyen Web Components</strong> — card fields iframe directly to PSP. PAN never hits your JS.</li>
+          <li>PSP returns a <strong style="color: var(--text);">payment method token</strong>. Store this, not the PAN.</li>
+          <li>Use <strong style="color: var(--text);">Network Tokens</strong> (Visa/MC) for recurring — more secure, higher auth rates.</li>
+          <li>All API calls over <strong style="color: var(--text);">TLS 1.2+</strong>. No card data in logs.</li>
+          <li>Use <strong style="color: var(--text);">CVV never stored</strong> — not even encrypted. PCI strictly prohibits it.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="grid-auto" style="align-content: start;">
+      <div class="card card-blue">
+        <h3>Tokenization vs Encryption</h3>
+        <p><strong>Encryption:</strong> reversible transformation using a key. Key compromise = all data exposed. PAN is still a PAN when decrypted.<br><br>
+        <strong>Tokenization:</strong> substitution with a random surrogate. Token has no mathematical relationship to PAN. Vault holds the mapping. Token breach = worthless data.</p>
+      </div>
+      <div class="card card-purple">
+        <h3>TLS / mTLS</h3>
+        <p>All payment APIs must use TLS 1.2+ (PCI requires 1.2 minimum; 1.3 preferred). Between internal microservices handling payment data, use <strong>mTLS</strong> (mutual TLS) — both parties authenticate. Prevents man-in-the-middle within cluster.</p>
+      </div>
+      <div class="card card-coral">
+        <h3>Fraud Detection Signals</h3>
+        <p>IP geolocation vs billing address. Device fingerprint. Transaction velocity (N charges in T minutes). Card testing patterns (many small auth attempts). Bin attack (same card prefix). ML models trained on historical chargebacks. Rules engine for hard blocks.</p>
+      </div>
+      <div class="card card-green">
+        <h3>Secrets Management</h3>
+        <p>API keys, encryption keys: never in code or env vars in plaintext. Use <strong>AWS Secrets Manager</strong>, <strong>HashiCorp Vault</strong>, or <strong>GCP Secret Manager</strong>. Rotate keys automatically. Audit every access. Separate keys per environment.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- =================== SECTION 8: RETRIES & RESILIENCE -->
+<div class="section" id="retries">
+  <div class="section-label">08 — Resilience</div>
+  <h2>Retry Strategies &amp; Failure Handling</h2>
+
+  <div class="grid-3">
+    <div class="card card-amber">
+      <h3>Exponential Backoff + Jitter</h3>
+      <p>Retry delay = <code style="font-family: var(--mono); font-size: 11px; color: var(--teal);">min(cap, base × 2^attempt) + random(0, jitter)</code>. Jitter prevents thundering herd — all clients retrying simultaneously after an outage. AWS SDK uses full jitter by default.</p>
+    </div>
+    <div class="card card-teal">
+      <h3>Circuit Breaker</h3>
+      <p><strong>Closed:</strong> Normal — calls pass through.<br>
+      <strong>Open:</strong> Fail fast after N consecutive failures. Prevent cascade.<br>
+      <strong>Half-Open:</strong> Probe with one call after timeout. If success → Closed. If fail → Open again.<br>
+      <em>Libraries: Resilience4j (Java), Polly (.NET), pybreaker (Python).</em></p>
+    </div>
+    <div class="card card-coral">
+      <h3>Dead Letter Queue (DLQ)</h3>
+      <p>After N failed retries, message goes to DLQ. Human-reviewed or auto-remediated. Essential for financial workflows — a payment event that never processes is money stuck in limbo. Alert on DLQ depth &gt; 0.</p>
+    </div>
+    <div class="card card-blue">
+      <h3>Retry-Safe Operations Only</h3>
+      <p>Only retry <strong>idempotent</strong> operations. Never blindly retry a payment creation without an idempotency key — you will double-charge. Retrying read operations (GET) is always safe. Retrying writes requires idempotency.</p>
+    </div>
+    <div class="card card-green">
+      <h3>Timeout Strategy</h3>
+      <p>Set aggressive timeouts: connection (1–2s), read (5–30s for payments — processors can be slow). Always distinguish: <strong>network timeout</strong> (request never arrived) vs <strong>processing timeout</strong> (arrived but slow). Only network timeout is safe to retry with same idempotency key.</p>
+    </div>
+    <div class="card card-purple">
+      <h3>Bulkhead Pattern</h3>
+      <p>Isolate thread pools per external dependency. If payment processor A hangs, it shouldn't exhaust all threads and take down processor B. Named after ship bulkheads — compartmentalize failures. Use with circuit breaker.</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 16px; border-left: 3px solid var(--amber);">
+    <h3>Which HTTP Errors to Retry</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-top: 10px;">
+      <div>
+        <span class="badge badge-coral">Never Retry</span>
+        <ul style="list-style: none; margin-top: 6px;">
+          <li style="font-family: var(--mono); font-size: 11px; color: var(--muted); padding: 3px 0;">400 Bad Request</li>
+          <li style="font-family: var(--mono); font-size: 11px; color: var(--muted); padding: 3px 0;">401 Unauthorized</li>
+          <li style="font-family: var(--mono); font-size: 11px; color: var(--muted); padding: 3px 0;">403 Forbidden</li>
+          <li style="font-family: var(--mono); font-size: 11px; color: var(--muted); padding: 3px 0;">402 Card Declined</li>
+          <li style="font-family: var(--mono); font-size: 11px; color: var(--muted); padding: 3px 0;">422 Unprocessable</li>
+        </ul>
+      </div>
+      <div>
+        <span class="badge badge-amber">Retry w/ Backoff</span>
+        <ul style="list-style: none; margin-top: 6px;">
+          <li style="font-family: var(--mono); font-size: 11px; color: var(--muted); padding: 3px 0;">429 Rate Limited</li>
+          <li style="font-family: var(--mono); font-size: 11px; color: var(--muted); padding: 3px 0;">500 Server Error</li>
+          <li style="font-family: var(--mono); font-size: 11px; color: var(--muted); padding: 3px 0;">502 Bad Gateway</li>
+          <li style="font-family: var(--mono); font-size: 11px; color: var(--muted); padding: 3px 0;">503 Unavailable</li>
+          <li style="font-family: var(--mono); font-size: 11px; color: var(--muted); padding: 3px 0;">504 Gateway Timeout</li>
+        </ul>
+      </div>
+      <div>
+        <span class="badge badge-teal">Retry + Idempotency Key</span>
+        <ul style="list-style: none; margin-top: 6px;">
+          <li style="font-family: var(--mono); font-size: 11px; color: var(--muted); padding: 3px 0;">Network timeout</li>
+          <li style="font-family: var(--mono); font-size: 11px; color: var(--muted); padding: 3px 0;">Connection reset</li>
+          <li style="font-family: var(--mono); font-size: 11px; color: var(--muted); padding: 3px 0;">DNS failure</li>
+        </ul>
+        <p style="font-size: 11px; color: var(--dim); margin-top: 6px; font-style: italic;">Reuse the SAME idempotency key on retry</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- =================== SECTION 9: OBSERVABILITY -->
+<div class="section" id="observability">
+  <div class="section-label">09 — Observability</div>
+  <h2>Observability &amp; Alerting</h2>
+
+  <div class="grid-3">
+    <div class="card card-amber">
+      <h3>Key Metrics to Track</h3>
+      <ul class="kv-list" style="margin-top: 8px;">
+        <li><span class="kv-key">payment_success_rate</span><span class="kv-val">% of attempted payments that succeed. Alert below 95%.</span></li>
+        <li><span class="kv-key">payment_latency_p99</span><span class="kv-val">Tail latency, not average. Customers feel p99.</span></li>
+        <li><span class="kv-key">duplicate_payment_count</span><span class="kv-val">Should be 0. Any hit = idempotency bug.</span></li>
+        <li><span class="kv-key">dlq_depth</span><span class="kv-val">Dead-letter queue size. Should be 0.</span></li>
+        <li><span class="kv-key">reconciliation_drift</span><span class="kv-val">Delta between ledger and processor. Alert on any non-zero.</span></li>
+        <li><span class="kv-key">chargeback_rate</span><span class="kv-val">Visa: above 1% = high-risk merchant. Above 2% = program termination.</span></li>
+      </ul>
+    </div>
+    <div class="card card-teal">
+      <h3>Distributed Tracing</h3>
+      <p style="margin-bottom: 10px;">Every payment request gets a <strong>trace ID</strong> propagated through all services. Correlate gateway → processor → ledger → webhook in a single trace.</p>
+      <p><strong>Tools:</strong> Jaeger, Zipkin, AWS X-Ray, Datadog APM, Honeycomb. Use W3C TraceContext headers (<code style="font-family: var(--mono); font-size: 11px; color: var(--teal);">traceparent</code>) for interop.</p>
+    </div>
+    <div class="card card-coral">
+      <h3>Audit Logging</h3>
+      <p style="margin-bottom: 10px;">Every state change to a payment, ledger entry, refund, or payout must be logged with: timestamp, actor (user_id or service), action, before-state, after-state.</p>
+      <p>Store in an <strong>append-only</strong> table or object storage (S3/GCS). PCI requires 1-year retention, 3-month immediate availability. Never purge.</p>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- =================== SECTION 10: HLD OVERVIEW -->
+<div class="section" id="hld">
+  <div class="section-label">10 — High-Level Design</div>
+  <h2>Payment System HLD Components</h2>
+
+  <div class="term-grid">
+    <div class="term">
+      <div class="term-name">API Gateway / Load Balancer</div>
+      <div class="term-def">L7 LB (NGINX, AWS ALB) for payment APIs. SSL termination here. Add WAF (Web Application Firewall) for fraud/DDoS. Rate limit per API key at this layer.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Payment Service</div>
+      <div class="term-def">Core service: receives payment requests, validates, calls PSP/processor, writes to ledger, publishes events. Must be stateless and horizontally scalable.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Idempotency Store</div>
+      <div class="term-def">Redis (hot) + PostgreSQL (durable). Check Redis first (nanosecond lookup), fall back to Postgres. Write-through on first request. TTL-expire from both stores.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Ledger DB</div>
+      <div class="term-def">PostgreSQL or CockroachDB. Append-only entries. ACID transactions for balance updates. Partitioned by account_id for scale. Read replicas for reporting queries.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Event Broker (Kafka)</div>
+      <div class="term-def">Outbox pattern: Debezium polls Postgres outbox table → publishes to Kafka. All downstream services (notifications, analytics, fraud, reconciliation) consume from Kafka.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Webhook Service</div>
+      <div class="term-def">Consumes payment events from Kafka. Delivers HTTP POST to merchant endpoints. Retry with exponential backoff. Signed with HMAC-SHA256. Merchant must verify signature.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Reconciliation Service</div>
+      <div class="term-def">Nightly batch: downloads settlement file from processor/bank. Compares every line to internal ledger. Flags discrepancies. Triggers auto-correction or escalation.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Fraud Detection Service</div>
+      <div class="term-def">Synchronous (pre-authorization): score transaction in &lt;200ms using rules + ML. Async (post-authorization): deeper ML models, manual review queue. Feed chargebacks back to training data.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Vault Service</div>
+      <div class="term-def">Stores PAN↔token mapping. Isolated network segment (most restricted VPC subnet). Only payment service has access. Separate encryption key per tenant. HSM for key storage.</div>
+    </div>
+    <div class="term">
+      <div class="term-name">Cache Layer (Redis)</div>
+      <div class="term-def">Rate limiting counters, idempotency hot cache, session tokens, merchant config. Redis Cluster for HA. Write-through for critical data. Never as the only store for financial data.</div>
+    </div>
+  </div>
+
+  <div class="alert alert-teal" style="margin-top: 20px;">
+    <span class="alert-icon">◈</span>
+    <span><strong>Capacity estimation quick numbers:</strong> 1,000 TPS at 100ms avg latency = 100 concurrent connections minimum. Peak factor 3–5x = 3,000–5,000 TPS headroom. Ledger write = ~200 bytes/row × 1,000 TPS = 200 KB/s ≈ 17 GB/day. Keep 90-day hot, archive cold to S3 + Athena for analytical queries.</span>
+  </div>
+</div>
+
+</div><!-- end .main -->
+
+<div style="background: var(--bg2); border-top: 1px solid var(--border); padding: 20px 48px; font-family: var(--mono); font-size: 10.5px; color: var(--dim); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+  <span>Payment Systems Design Cheatsheet</span>
+  <span style="color: var(--amber);">idempotency · saga · pci-dss · outbox · circuit-breaker · ledger</span>
+</div>
+
+</body>
+</html>
