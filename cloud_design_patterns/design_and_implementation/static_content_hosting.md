@@ -75,9 +75,9 @@ Client ──── API Requests ──► Load Balancer → App Server
 ┌─────────────────────────────────────────────────────────────────────┐
 │                          CI/CD PIPELINE                             │
 │                                                                     │
-│  Source Repo → Build (webpack/vite) → Asset Fingerprinting         │
+│  Source Repo → Build (webpack/vite) → Asset Fingerprinting          │
 │                    │                                                │
-│                    └──── Upload to Object Storage (S3/GCS/Blob)    │
+│                    └──── Upload to Object Storage (S3/GCS/Blob)     │
 └────────────────────────────────────┬────────────────────────────────┘
                                      │
                                      ▼
