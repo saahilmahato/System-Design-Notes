@@ -12,29 +12,7 @@ The techniques below are organized by **primary benefit**. Most techniques impro
 
 Store results of expensive operations so repeated requests are served from fast memory.
 
-```plantuml
-@startuml
-skinparam backgroundColor #FAFAFA
-skinparam ArrowColor #336699
-
-actor Client
-
-rectangle "Application Server" as App #EAF4FB
-rectangle "Cache (Redis / Memcached)" as Cache #FFF9C4
-database "Database" as DB #F3E5F5
-
-Client -> App : Request
-App -> Cache : Lookup key
-alt Cache HIT
-  Cache --> App : Return cached value (< 1 ms)
-else Cache MISS
-  App -> DB : Query
-  DB --> App : Result
-  App -> Cache : Store result (TTL)
-  App --> Client : Response
-end
-@enduml
-```
+![alt text](image-9.png)
 
 | Cache Type | Where | Latency Benefit | Use Case |
 |---|---|---|---|
@@ -57,30 +35,7 @@ end
 
 Distribute incoming requests across multiple servers to prevent any one from becoming a bottleneck.
 
-```plantuml
-@startuml
-skinparam backgroundColor #FAFAFA
-skinparam ArrowColor #336699
-
-actor "Client A" as CA
-actor "Client B" as CB
-actor "Client C" as CC
-
-rectangle "Load Balancer" as LB #D6E8F7
-
-rectangle "Server 1" as S1 #EAF4FB
-rectangle "Server 2" as S2 #EAF4FB
-rectangle "Server 3" as S3 #EAF4FB
-
-CA --> LB
-CB --> LB
-CC --> LB
-
-LB --> S1
-LB --> S2
-LB --> S3
-@enduml
-```
+![alt text](image-10.png)
 
 | Algorithm | Best For | Trade-off |
 |---|---|---|
@@ -98,27 +53,7 @@ LB --> S3
 
 Decouple producers and consumers. The producer gets an instant acknowledgment; work is done in the background.
 
-```plantuml
-@startuml
-skinparam backgroundColor #FAFAFA
-skinparam ArrowColor #336699
-
-actor Client
-rectangle "API Server" as API #EAF4FB
-queue "Message Queue\n(Kafka / RabbitMQ / SQS)" as MQ #FFF9C4
-rectangle "Worker 1" as W1 #D6E8F7
-rectangle "Worker 2" as W2 #D6E8F7
-rectangle "Worker 3" as W3 #D6E8F7
-
-Client -> API : Submit job
-API -> MQ : Enqueue (instant ack)
-API --> Client : 202 Accepted
-
-MQ --> W1 : Dequeue
-MQ --> W2 : Dequeue
-MQ --> W3 : Dequeue
-@enduml
-```
+![alt text](image-11.png)
 
 | Queue Property | Impact |
 |---|---|
@@ -139,28 +74,7 @@ MQ --> W3 : Dequeue
 
 **Primary benefit: Latency ↓↓, Throughput ↑**
 
-```plantuml
-@startuml
-skinparam backgroundColor #FAFAFA
-skinparam ArrowColor #336699
-
-rectangle "Database Optimization Strategies" as Root #D6E8F7
-
-rectangle "Indexing" as I #EAF4FB
-rectangle "Read Replicas" as RR #EAF4FB
-rectangle "Sharding" as SH #EAF4FB
-rectangle "Connection Pooling" as CP #EAF4FB
-rectangle "Query Optimization" as QO #EAF4FB
-rectangle "Denormalization" as DN #EAF4FB
-
-Root --> I
-Root --> RR
-Root --> SH
-Root --> CP
-Root --> QO
-Root --> DN
-@enduml
-```
+![alt text](image-12.png)
 
 | Technique | Latency Impact | Throughput Impact | Notes |
 |---|---|---|---|
@@ -180,30 +94,7 @@ Root --> DN
 
 Move static (and increasingly dynamic) content to edge nodes close to the user.
 
-```plantuml
-@startuml
-skinparam backgroundColor #FAFAFA
-skinparam ArrowColor #336699
-
-cloud "Origin Server\n(US East)" as Origin #EAF4FB
-
-rectangle "CDN Edge\n(Europe)" as EU #D6E8F7
-rectangle "CDN Edge\n(Asia)" as AS #D6E8F7
-rectangle "CDN Edge\n(US West)" as USW #D6E8F7
-
-actor "EU User" as EUU
-actor "Asia User" as ASU
-actor "US West User" as USWU
-
-Origin --> EU : Cache fill
-Origin --> AS : Cache fill
-Origin --> USW : Cache fill
-
-EUU --> EU : < 10 ms (local)
-ASU --> AS : < 10 ms (local)
-USWU --> USW : < 10 ms (local)
-@enduml
-```
+![alt text](image-13.png)
 
 | CDN Use Case | Latency Reduction |
 |---|---|
@@ -226,27 +117,7 @@ USWU --> USW : < 10 ms (local)
 | **Actor model** | Message-passing between isolated actors | Distributed systems (Erlang/Akka) |
 | **Data parallelism** | Same operation on partitioned data | Batch processing, MapReduce |
 
-```plantuml
-@startuml
-skinparam backgroundColor #FAFAFA
-
-rectangle "I/O-bound workload" as IO #FFF9C4 {
-  rectangle "Use: Async / non-blocking" as IO1
-  note right of IO1
-    Waiting on network/disk
-    does not block other requests
-  end note
-}
-
-rectangle "CPU-bound workload" as CPU #EAF4FB {
-  rectangle "Use: Multi-process / worker pool" as CPU1
-  note right of CPU1
-    Distribute computation
-    across cores
-  end note
-}
-@enduml
-```
+![alt text](image-14.png)
 
 ---
 
@@ -318,43 +189,4 @@ Group multiple operations into a single system call or network round-trip.
 
 ## Decision Guide: Which Technique to Apply?
 
-```plantuml
-@startuml
-skinparam backgroundColor #FAFAFA
-skinparam ArrowColor #336699
-
-start
-
-:Identify bottleneck with profiling;
-
-if (Bottleneck is I/O?) then (yes)
-  :Use async I/O + connection pooling;
-  if (Data is repeated?) then (yes)
-    :Add caching layer;
-  endif
-else (no, CPU-bound)
-  if (Can parallelize?) then (yes)
-    :Multi-process / worker pool;
-  else (no, serial)
-    :Optimize algorithm (O-complexity);
-    :Consider hardware upgrade;
-  endif
-endif
-
-if (Global users?) then (yes)
-  :Add CDN;
-endif
-
-if (High write volume?) then (yes)
-  :Add message queue + async workers;
-  :Consider batching writes;
-endif
-
-if (Read/write ratio > 5:1?) then (yes)
-  :Add read replicas;
-  :Consider denormalization;
-endif
-
-stop
-@enduml
-```
+![alt text](image-15.png)
