@@ -25,23 +25,7 @@ These are two distinct, often competing metrics. Understanding their relationshi
 
 A critical misconception: **low latency ≠ high throughput**, and vice versa.
 
-```plantuml
-@startuml
-skinparam backgroundColor #FAFAFA
-
-rectangle "Low Latency\nLow Throughput" as Q1 #FFE0B2
-note right of Q1 : Single-threaded server\nthat responds fast\nbut handles few requests
-
-rectangle "Low Latency\nHigh Throughput" as Q2 #C8E6C9
-note right of Q2 : The ideal:\nfast responses +\nhigh concurrency
-
-rectangle "High Latency\nLow Throughput" as Q3 #FFCDD2
-note right of Q3 : Worst case:\nslow and can't scale
-
-rectangle "High Latency\nHigh Throughput" as Q4 #FFF9C4
-note right of Q4 : Batch systems:\nslow per-item but\nhigh aggregate volume
-@enduml
-```
+![alt text](image-5.png)
 
 | Quadrant | Latency | Throughput | Typical Scenario |
 |---|---|---|---|
@@ -58,22 +42,7 @@ Improving throughput often **increases latency**, and reducing latency often **r
 
 ### Trade-off 1: Batching
 
-```plantuml
-@startuml
-skinparam backgroundColor #FAFAFA
-
-participant Producer
-participant "Batch Buffer" as Buffer
-participant Consumer
-
-Producer -> Buffer : Request 1
-Producer -> Buffer : Request 2
-Producer -> Buffer : Request 3
-note right of Buffer : Waiting to fill batch...
-Buffer -> Consumer : Batch of 3 (higher throughput)
-note right of Consumer : Each request waited longer\n→ higher latency per item
-@enduml
-```
+![alt text](image-6.png)
 
 | | No Batching | With Batching |
 |---|---|---|
@@ -99,27 +68,7 @@ Caching frequently accessed data in memory:
 
 ### Example 1: Web Server
 
-```plantuml
-@startuml
-skinparam backgroundColor #FAFAFA
-skinparam ArrowColor #336699
-
-actor Users
-rectangle "Load Balancer" as LB #D6E8F7
-rectangle "Server A" as SA #EAF4FB
-rectangle "Server B" as SB #EAF4FB
-rectangle "Cache (Redis)" as Cache #FFF9C4
-database "Database" as DB #F3E5F5
-
-Users --> LB
-LB --> SA
-LB --> SB
-SA --> Cache : cache hit → low latency
-SA --> DB : cache miss → higher latency
-SB --> Cache
-SB --> DB
-@enduml
-```
+![alt text](image-7.png)
 
 | Design Decision | Effect on Latency | Effect on Throughput |
 |---|---|---|
@@ -130,30 +79,7 @@ SB --> DB
 
 ### Example 2: Database
 
-```plantuml
-@startuml
-skinparam backgroundColor #FAFAFA
-
-rectangle "Read-Heavy System" as RH #EAF4FB {
-  database "Primary DB" as PDB
-  database "Read Replica 1" as R1
-  database "Read Replica 2" as R2
-  rectangle "In-Memory Cache" as MC #FFF9C4
-}
-
-note bottom of MC
-  Cache reduces latency for hot data
-  but consumes memory that could
-  serve more concurrent queries
-end note
-
-note bottom of R1
-  Replicas increase read throughput
-  but replication lag introduces
-  eventual consistency latency
-end note
-@enduml
-```
+![alt text](image-8.png)
 
 | Strategy | Latency Impact | Throughput Impact |
 |---|---|---|
