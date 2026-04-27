@@ -1,7 +1,5 @@
 # Weak Consistency
 
-← [Back to README](./README.md)
-
 ---
 
 ## Definition
@@ -16,38 +14,7 @@ Weak consistency is the most relaxed consistency model. The system makes no prom
 
 In a weakly consistent system, a write is acknowledged as soon as it lands on **one node** (typically the local/primary node). Replicas are updated on a best-effort basis. Reads may return stale or even lost data.
 
-```plantuml
-@startuml
-!theme plain
-skinparam backgroundColor #FAFAFA
-skinparam sequence {
-  ArrowColor #2C3E50
-  ParticipantBackgroundColor #FEF9E7
-  ParticipantBorderColor #E67E22
-  NoteBackgroundColor #FDEDEC
-}
-
-actor       Client
-participant "Node A\n(Local)"    as A
-participant "Node B\n(Replica)"  as B
-participant "Node C\n(Replica)"  as C
-
-Client -> A  : WRITE (score = 9500)
-A      --> Client : Write Acknowledged ✅ (immediately)
-
-note over B, C : Replicas NOT yet updated
-
-Client -> B  : READ (score?)
-B      --> Client : score = 8800 ⚠️ (stale data)
-
-note over A : Async replication begins...
-
-A -[dashed]-> B : score = 9500 (eventually)
-A -[dashed]-> C : score = 9500 (eventually)
-
-note over B, C : May update... may not.\nNo guarantee on timing.
-@enduml
-```
+![alt text](image-11.png)
 
 ### Key Characteristics
 
@@ -80,36 +47,7 @@ note over B, C : May update... may not.\nNo guarantee on timing.
 
 **Scenario:** A player's position and score are updated many times per second. Minor, momentary inconsistencies are tolerable — the game must keep running.
 
-```plantuml
-@startuml
-!theme plain
-skinparam backgroundColor #FAFAFA
-skinparam sequence {
-  ArrowColor #2C3E50
-  ParticipantBackgroundColor #FEF9E7
-  ParticipantBorderColor #E67E22
-}
-
-actor "Player A\n(Tokyo)"    as PA
-actor "Player B\n(London)"   as PB
-participant "Game Server\n(Tokyo)" as GT
-participant "Game Server\n(London)" as GL
-
-PA -> GT : Move to position (120, 45)
-GT --> PA : ✅ Accepted (immediate)
-
-note over GL : London server not yet updated
-
-PB -> GL : Where is Player A?
-GL --> PB : Position (115, 42) ⚠️ (3 frames behind)
-
-note over GT, GL
-  Minor lag is acceptable.
-  Game continues uninterrupted.
-  Players experience it as "network lag."
-end note
-@enduml
-```
+![alt text](image-12.png)
 
 **Why Weak Consistency?**
 - Position updates happen 60+ times per second; synchronous replication is impossible
@@ -130,30 +68,7 @@ end note
 | Node failure | Call degrades gracefully, does not hard-fail |
 | No ACK per packet | UDP used — no guarantee of delivery order |
 
-```plantuml
-@startuml
-!theme plain
-skinparam backgroundColor #FAFAFA
-
-actor "Speaker"   as S
-actor "Listener"  as L
-participant "Relay Server" as R
-
-S -> R  : Audio Packet 1
-S -> R  : Audio Packet 2
-S -> R  : Audio Packet 3
-
-R -> L  : Audio Packet 1 ✅
-R -[#red]-> L : Audio Packet 2 ❌ (dropped)
-R -> L  : Audio Packet 3 ✅
-
-note over L
-  Packet 2 is gone forever.
-  System does NOT wait or retry.
-  Audio skips briefly and continues.
-end note
-@enduml
-```
+![alt text](image-13.png)
 
 **Why Weak Consistency?**
 - Retransmitting a dropped packet would cause more disruption than ignoring it
@@ -184,31 +99,7 @@ end note
 
 **Scenario:** A viral video shows "1.4M watching." The actual number might differ by thousands.
 
-```plantuml
-@startuml
-!theme plain
-skinparam backgroundColor #FAFAFA
-skinparam sequence {
-  ArrowColor #2C3E50
-  ParticipantBackgroundColor #FEF9E7
-  ParticipantBorderColor #E67E22
-}
-
-participant "CDN Node A\n(US)" as A
-participant "CDN Node B\n(EU)" as B  
-participant "CDN Node C\n(Asia)" as C
-actor "Viewer"
-
-Viewer -> A : Join stream (US)
-A --> Viewer : count = 1,403,201
-
-note over B, C
-  B shows: 1,401,055
-  C shows: 1,398,744
-  All slightly different — all acceptable.
-end note
-@enduml
-```
+![alt text](image-14.png)
 
 **Why Weak Consistency?**
 - Exact view counts don't affect the user experience
