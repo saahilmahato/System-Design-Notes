@@ -1,7 +1,5 @@
 # Eventual Consistency
 
-← [Back to README](./README.md)
-
 ---
 
 ## Definition
@@ -16,43 +14,7 @@ Eventual consistency is a specific form of weak consistency that adds one critic
 
 In an eventually consistent system, a write is acknowledged after landing on one (or a quorum of) node(s). Replication to other nodes happens **asynchronously** in the background. Reads may return stale data until all replicas converge.
 
-```plantuml
-@startuml
-!theme plain
-skinparam backgroundColor #FAFAFA
-skinparam sequence {
-  ArrowColor #2C3E50
-  ParticipantBackgroundColor #EAF7EC
-  ParticipantBorderColor #27AE60
-  NoteBackgroundColor #FEF9E7
-}
-
-actor       Client
-participant "Node A\n(Write Node)"  as A
-participant "Node B\n(Replica)"     as B
-participant "Node C\n(Replica)"     as C
-
-Client -> A  : WRITE ("Alice posted: Hello!")
-A      --> Client : ✅ Acknowledged
-
-note over B, C : Not yet updated (T+0)
-
-A -[dashed]-> B : Async Replication (T+2s)
-A -[dashed]-> C : Async Replication (T+4s)
-
-note over A, C
-  T+0: Only A has the post
-  T+2: A and B have the post
-  T+4: All nodes converged ✅
-end note
-
-Client -> B  : READ post at T+1s
-B      --> Client : ⚠️ Post not visible yet (stale)
-
-Client -> B  : READ post at T+3s
-B      --> Client : ✅ "Alice posted: Hello!" (converged)
-@enduml
-```
+![alt text](image-6.png)
 
 ---
 
@@ -73,34 +35,7 @@ Different systems use different strategies to resolve conflicts and drive conver
 
 ## The Convergence Lifecycle
 
-```plantuml
-@startuml
-!theme plain
-skinparam backgroundColor #FAFAFA
-skinparam state {
-  BackgroundColor #EAF7EC
-  BorderColor #27AE60
-}
-
-[*] --> WriteAccepted : Client writes to Node A
-
-WriteAccepted : Write acknowledged immediately
-WriteAccepted --> PropagatingToReplicas : Async replication begins
-
-PropagatingToReplicas : Nodes B, C, D receive updates at different times
-PropagatingToReplicas --> TemporaryInconsistency : Some nodes updated, some not
-
-TemporaryInconsistency : Reads may return different values\ndepending on which node serves them
-TemporaryInconsistency --> ConflictDetected : Conflicting writes found?
-
-ConflictDetected --> ConflictResolved : Apply LWW / Vector Clock / CRDT
-ConflictResolved --> Converged
-TemporaryInconsistency --> Converged : All replicas updated
-
-Converged : All nodes agree on the same value ✅
-Converged --> [*]
-@enduml
-```
+![alt text](image-7.png)
 
 ---
 
@@ -110,39 +45,7 @@ Converged --> [*]
 
 **Scenario:** Alice posts a photo. It appears instantly in her feed, but followers in different regions may see it a few seconds later.
 
-```plantuml
-@startuml
-!theme plain
-skinparam backgroundColor #FAFAFA
-skinparam sequence {
-  ArrowColor #2C3E50
-  ParticipantBackgroundColor #EAF7EC
-  ParticipantBorderColor #27AE60
-}
-
-actor Alice
-actor "Bob\n(US East)" as Bob
-actor "Carol\n(Europe)" as Carol
-participant "US East\nData Center" as US
-participant "Europe\nData Center" as EU
-
-Alice -> US   : POST "New photo! 🌅"
-US    --> Alice : ✅ Posted
-
-Bob   -> US   : View feed (T+1s)
-US    --> Bob  : ✅ Alice's photo visible
-
-note over EU : Async replication in progress
-
-Carol -> EU   : View feed (T+1s)
-EU    --> Carol : ⚠️ Photo not yet visible
-
-note over EU : Replication arrives at T+3s
-
-Carol -> EU   : View feed (T+5s)
-EU    --> Carol : ✅ Alice's photo visible
-@enduml
-```
+![alt text](image-8.png)
 
 **Why Eventual Consistency?**
 - Instagram serves 2B+ users; synchronous global replication is infeasible
@@ -162,27 +65,7 @@ EU    --> Carol : ✅ Alice's photo visible
 | 2 hours | New IP | **New IP** | Old IP |
 | 24 hours | New IP | New IP | **New IP** ✅ |
 
-```plantuml
-@startuml
-!theme plain
-skinparam backgroundColor #FAFAFA
-
-rectangle "Authoritative\nDNS Server" as auth #EAF7EC
-rectangle "US Resolver\nTTL=3600s" as us #FEF9E7
-rectangle "EU Resolver\nTTL=3600s" as eu #FEF9E7
-rectangle "Asia Resolver\nTTL=3600s" as asia #FEF9E7
-
-auth -[dashed]-> us   : propagate (fast)
-auth -[dashed]-> eu   : propagate (medium)
-auth -[dashed]-> asia : propagate (slow)
-
-note bottom of auth
-  IP changed: 1.2.3.4 → 5.6.7.8
-  Not all resolvers will update
-  at the same time (TTL governs this)
-end note
-@enduml
-```
+![alt text](image-9.png)
 
 **Why Eventual Consistency?**
 - There are millions of DNS resolvers worldwide — synchronous updates are impossible
@@ -195,35 +78,7 @@ end note
 
 **Scenario:** A user adds items to their cart on mobile, then opens the web app. There may be a brief moment where the web app cart appears empty.
 
-```plantuml
-@startuml
-!theme plain
-skinparam backgroundColor #FAFAFA
-skinparam sequence {
-  ArrowColor #2C3E50
-  ParticipantBackgroundColor #EAF7EC
-  ParticipantBorderColor #27AE60
-}
-
-actor "User (Mobile)"  as M
-actor "User (Web)"     as W
-participant "Mobile\nWrite Node" as MN
-participant "Web\nRead Node"     as WN
-
-M  -> MN : Add "Headphones" to cart
-MN --> M : ✅ Added
-
-note over WN : Async sync in progress (T+1s)
-
-W  -> WN : View cart
-WN --> W : ⚠️ Cart appears empty (stale)
-
-note over WN : Replica updated (T+2s)
-
-W  -> WN : Refresh cart
-WN --> W : ✅ Headphones in cart
-@enduml
-```
+![alt text](image-10.png)
 
 **Why Eventual Consistency?**
 - Amazon's 2007 Dynamo paper introduced this model specifically for shopping carts
