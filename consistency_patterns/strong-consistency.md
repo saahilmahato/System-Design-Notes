@@ -1,7 +1,5 @@
 # Strong Consistency
 
-← [Back to README](./README.md)
-
 ---
 
 ## Definition
@@ -16,44 +14,7 @@ Strong consistency is the strictest form of consistency. It guarantees that ever
 
 In a strongly consistent system, a write is not acknowledged to the client until **all replicas** have been updated. Reads can be served from any node with the guarantee that the data is current.
 
-```plantuml
-@startuml
-!theme plain
-skinparam backgroundColor #FAFAFA
-skinparam sequence {
-  ArrowColor #2C3E50
-  ParticipantBackgroundColor #EBF5FB
-  ParticipantBorderColor #2980B9
-  NoteBackgroundColor #FEF9E7
-}
-
-actor       Client
-participant "Primary Node"   as P
-participant "Replica Node 1" as R1
-participant "Replica Node 2" as R2
-
-Client -> P  : WRITE (balance = $500)
-activate P
-
-P      -> R1 : Replicate (balance = $500)
-activate R1
-R1     --> P : ACK
-deactivate R1
-
-P      -> R2 : Replicate (balance = $500)
-activate R2
-R2     --> P : ACK
-deactivate R2
-
-P      --> Client : Write Confirmed ✅
-deactivate P
-
-note over P, R2 : ALL nodes now have balance = $500
-
-Client -> P  : READ (balance?)
-P      --> Client : $500 (guaranteed fresh)
-@enduml
-```
+![alt text](image-2.png)
 
 ### Key Mechanisms
 
@@ -85,35 +46,7 @@ P      --> Client : $500 (guaranteed fresh)
 
 **Scenario:** Alice transfers $500 to Bob. Both account balances must reflect the transaction atomically.
 
-```plantuml
-@startuml
-!theme plain
-skinparam backgroundColor #FAFAFA
-skinparam sequence {
-  ArrowColor #2C3E50
-  ParticipantBackgroundColor #EBF5FB
-  ParticipantBorderColor #2980B9
-}
-
-actor Alice
-participant "Banking System\n(Primary)" as B
-database "Alice's Account\n(All Replicas)" as A
-database "Bob's Account\n(All Replicas)" as Bo
-
-Alice -> B   : Transfer $500 to Bob
-B     -> A   : Debit Alice: -$500 [SYNC]
-A     --> B  : Confirmed
-B     -> Bo  : Credit Bob: +$500 [SYNC]
-Bo    --> B  : Confirmed
-B     --> Alice : Transfer Complete ✅
-
-note over A, Bo
-  Both accounts reflect
-  the transfer immediately.
-  No replica can serve stale data.
-end note
-@enduml
-```
+![alt text](image-3.png)
 
 **Why Strong Consistency?**
 - Reading Alice's balance as $1000 after a confirmed debit of $500 is unacceptable
@@ -126,33 +59,7 @@ end note
 
 **Scenario:** A concert has 1 seat left. Two users try to book it simultaneously.
 
-```plantuml
-@startuml
-!theme plain
-skinparam backgroundColor #FAFAFA
-
-actor "User A" as UA
-actor "User B" as UB
-participant "Booking Service" as BS
-database "Seat Inventory\n(Strongly Consistent)" as SI
-
-UA -> BS : Book seat #42
-UB -> BS : Book seat #42
-
-BS -> SI  : Lock + Read seats (seats = 1)
-SI --> BS : seats = 1
-
-BS -> SI  : Write (seats = 0, owner = User A)
-note right : Serialized — User B must wait
-SI --> BS : Confirmed
-
-BS --> UA : ✅ Booking Confirmed
-
-BS -> SI  : Read seats (seats = 0)
-SI --> BS : seats = 0
-BS --> UB : ❌ Seat Unavailable
-@enduml
-```
+![alt text](image-4.png)
 
 **Why Strong Consistency?**
 - Overbooking causes real-world operational problems
@@ -226,25 +133,7 @@ W + R = 4 > 3 ✅  (guarantees at least one overlap)
 
 ## Summary
 
-```plantuml
-@startuml
-!theme plain
-skinparam backgroundColor #FAFAFA
-skinparam rectangle {
-  BackgroundColor #EBF5FB
-  BorderColor #2980B9
-}
-
-rectangle "Strong Consistency" {
-  rectangle "Write → Sync to ALL replicas → ACK" as flow
-  rectangle "Pros:\n+ No stale reads\n+ Simple reasoning\n+ ACID-friendly" as pros
-  rectangle "Cons:\n- Higher latency\n- Lower availability\n- Lower throughput" as cons
-}
-
-flow -down-> pros
-flow -down-> cons
-@enduml
-```
+![alt text](image-5.png)
 
 | | |
 |--|--|
