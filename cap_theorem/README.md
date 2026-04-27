@@ -33,9 +33,9 @@ Modern systems scale **horizontally** — adding commodity nodes rather than upg
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                   CAP Triangle                       │
-│                                                      │
-│              Consistency (C)                         │
+│                   CAP Triangle                      │
+│                                                     │
+│              Consistency (C)                        │
 │                   /\                                │
 │                  /  \                               │
 │                 / CA \   ← Does not exist in        │
