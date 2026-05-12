@@ -28,36 +28,13 @@
 | [03-replication-patterns.md](03-replication-patterns.md) | Master-Master, Master-Slave, sync vs async replication, consistency trade-offs |
 | [04-redundancy-and-fault-tolerance.md](04-redundancy-and-fault-tolerance.md) | Hardware/network/geographic redundancy, bulkheads, blast radius |
 | [05-health-monitoring-and-recovery.md](05-health-monitoring-and-recovery.md) | Health checks, circuit breakers, chaos engineering, graceful degradation |
+| [06-availability-in-numbers.md](06-availability-in-numbers.md) | Availability in numbers, mathematical formulas |
 
 ---
 
 ## Concept Map
 
-```plantuml
-@startmindmap
-* Availability
-** Measurement
-*** Nines (90% → 99.999%)
-*** MTBF / MTTR / MTTD
-*** SLAs / SLOs / SLIs
-** Patterns
-*** Failover
-**** Active-Active
-**** Active-Passive
-*** Replication
-**** Master-Master
-**** Master-Slave
-** Redundancy
-*** Hardware
-*** Network
-*** Geographic
-** Recovery
-*** Health Checks
-*** Circuit Breakers
-*** Graceful Degradation
-*** Chaos Engineering
-@endmindmap
-```
+![alt text](image-34.png)
 
 ---
 
