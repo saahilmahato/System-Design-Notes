@@ -212,4 +212,4 @@ When a system is overloaded, it should **intentionally reject excess requests** 
 
 ---
 
-*Previous: [04-redundancy-and-fault-tolerance.md](04-redundancy-and-fault-tolerance.md) | Back to: [README.md](README.md)*
+*Previous: [04-redundancy-and-fault-tolerance.md](04-redundancy-and-fault-tolerance.md) | Next: [06-availability-in-numbers.md](06-availability-in-numbers.md)*
