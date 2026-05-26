@@ -32,7 +32,7 @@ It involves:
 - **Reliability** — Ensure uptime and fault tolerance
 - **Maintainability** — Enable teams to evolve the system over time
 - **Performance** — Meet latency and throughput SLAs
-- **Interview signal** — Most top-tier companies (Google, Meta, Amazon) have a dedicated system design round
+- **Interview signal** — Most top-tier companies have a dedicated system design round
 
 ---
 
@@ -65,34 +65,11 @@ Vertical Scaling (Scale Up)        Horizontal Scaling (Scale Out)
 - **Replication** — Maintain multiple copies of data across nodes
 - **Goal** — High availability, fault tolerance, durability
 
-```
-# D2 Diagram: Replication
-primary: Primary DB {shape: cylinder}
-replica1: Replica 1 {shape: cylinder}
-replica2: Replica 2 {shape: cylinder}
-
-primary -> replica1: sync writes
-primary -> replica2: sync writes
-```
-
 ---
 
 ### CAP Theorem
 
 > A distributed system can guarantee only **2 of 3** properties simultaneously.
-
-```
-         Consistency
-              /\
-             /  \
-            /    \
-           / CA   \
-          /        \
-         /----CP----|
-        /     |     \
-  Availability --- Partition
-                    Tolerance
-```
 
 | Property | Meaning |
 |---|---|
@@ -113,8 +90,6 @@ primary -> replica2: sync writes
 - Each service owns its domain and communicates via **APIs**
 - Enables **independent deployment, scaling, and development**
 
-![Alt Text](microservices.png)
-
 **Pros:** Modularity, independent scaling, fault isolation
 **Cons:** Network overhead, distributed tracing complexity, eventual consistency challenges
 
@@ -134,8 +109,6 @@ primary -> replica2: sync writes
 - **Purpose** — Decouple producers from consumers; enable async processing
 - **Benefit** — Producers don't wait for consumers; system is resilient to spikes
 - **Tools** — Kafka, RabbitMQ, AWS SQS, Google Pub/Sub
-
-![Message Queue](message_queue.png)
 
 ---
 
@@ -169,8 +142,6 @@ Ensures **atomicity across distributed resources**.
 - **Commands** = write operations (mutate state)
 - **Queries** = read operations (return data)
 - Separate models for reads and writes → optimize each independently
-
-![CQRS](cqrs.png)
 
 ---
 
