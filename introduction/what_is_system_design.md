@@ -74,7 +74,7 @@ Vertical Scaling (Scale Up)        Horizontal Scaling (Scale Out)
 | Property | Meaning |
 |---|---|
 | **Consistency (C)** | All nodes return the same data at the same time |
-| **Availability (A)** | Every request receives a response (may not be latest) |
+| **Availability (A)** | Every request receives a non-error response (may not be latest) |
 | **Partition Tolerance (P)** | System functions despite network failures |
 
 **Real-world choices:**
