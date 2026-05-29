@@ -42,7 +42,7 @@
 
 ## Root Causes of Poor Performance
 
-### 1. Algorithmic Complexity — The Silent Killer
+### 1. Algorithmic Complexity
 
 The most impactful source of poor performance. A bad algorithm cannot be fixed by hardware.
 
