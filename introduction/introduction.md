@@ -36,7 +36,7 @@ In software engineering, system design focuses on the **high-level design of a s
 - Real-world systems face hardware failures, network partitions, and traffic spikes
 - Design decisions (replication, redundancy, failover) determine how a system survives these events
 
-### 3. Reduces Cost
+### 3. Optimizes Cost
 - Over-provisioning wastes money; under-provisioning causes outages
 - Good design balances cost and performance through smart trade-offs
 
@@ -68,7 +68,7 @@ A great engineer designs for today's needs while leaving room to evolve — avoi
 
 ## Core Philosophy
 
-> **Everything in system design is a trade-off. There is no perfect design — only the best design for a given set of constraints.**
+**Everything in system design is a trade-off. There is no perfect design — only the best design for a given set of constraints.**
 
 The goal is always to:
 1. Understand requirements deeply
