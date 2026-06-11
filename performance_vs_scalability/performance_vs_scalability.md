@@ -10,7 +10,7 @@
 | **Optimized by** | Faster algorithms, caching, better queries | Horizontal scaling, load balancing, sharding, queues |
 | **Scope** | Single request path | Entire system under load |
 
-> **Key insight:** A system can be highly performant but not scalable. A system can be scalable but have mediocre per-request performance. You need both — but diagnose them separately.
+**Key insight:** A system can be highly performant but not scalable. A system can be scalable but have mediocre per-request performance. You need both — but diagnose them separately.
 
 ---
 
@@ -37,7 +37,7 @@ This analogy maps cleanly to real distributed systems:
 | 2/min (2× capacity) | 1 min | 3 min |
 | 6/min (6× capacity) | 1 min | 6 min |
 
-> **The cashier's speed (performance) didn't change. The wait time (experienced performance) exploded.** This is a scalability problem, not a performance problem.
+**The cashier's speed (performance) didn't change. The wait time (experienced performance) exploded.** This is a scalability problem, not a performance problem.
 
 ---
 
@@ -63,7 +63,7 @@ This analogy maps cleanly to real distributed systems:
 - Shopper must decide which cashier to go to → 5-second overhead → **slight performance regression**
 - In software: adding servers introduces load balancer round-trips, distributed tracing overhead, network hops
 
-> **This is acceptable.** A 5ms overhead per request is worth handling 10× the load.
+**This is acceptable.** A 5ms overhead per request is worth handling 10× the load.
 
 ---
 
@@ -86,7 +86,7 @@ This analogy maps cleanly to real distributed systems:
 | Async message queue | Increases individual request latency | Decouples components, absorbs traffic spikes |
 | Microservices | Adds inter-service network calls | Each service scales independently |
 
-> **Rule of thumb:** Scalability improvements often trade a small amount of per-request performance for the ability to serve orders of magnitude more requests. This is almost always the right trade at scale.
+**Rule of thumb:** Scalability improvements often trade a small amount of per-request performance for the ability to serve orders of magnitude more requests. This is almost always the right trade at scale.
 
 ---
 
