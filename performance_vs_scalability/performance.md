@@ -2,7 +2,7 @@
 
 ## Definition
 
-> **Performance** is about how fast a system responds to a single unit of work — latency, throughput, and resource efficiency under a given load.
+**Performance** is about how fast a system responds to a single unit of work — latency, throughput, and resource efficiency under a given load.
 
 - **If your system is slow for a single user, you have a performance problem.**
 - Measured in: latency (ms), throughput (req/s), error rate (%), resource utilization (CPU/RAM %)
@@ -20,21 +20,21 @@
 | **Time to First Byte (TTFB)** | How fast the first byte reaches the client | Minimize |
 | **Apdex Score** | User satisfaction index based on latency thresholds | Closer to 1.0 |
 
-> Always measure **p99 latency**, not just averages. Averages hide the worst user experiences.
+Always measure **p99 latency**, not just averages. Averages hide the worst user experiences.
 
 ---
 
-## Root Causes of Poor Performance
+# Root Causes of Poor Performance
 
-- **Slow algorithms** — O(n²) where O(n log n) would suffice
-- **N+1 query problem** — fetching parent then looping to fetch each child separately
 - **Blocking I/O** — synchronous DB calls, file reads, network calls on critical paths
-- **No caching** — recomputing the same result on every request
 - **Unoptimized database queries** — missing indexes, full table scans, large joins
-- **Memory leaks** — gradual memory growth causing GC pauses or OOM crashes
-- **Serialization overhead** — converting large objects to/from JSON/Protobuf on hot paths
+- **N+1 query problem** — fetching parent then looping to fetch each child separately
+- **No caching** — recomputing the same result on every request
 - **Chatty APIs** — many small requests instead of one batched request
 - **Lock contention** — threads/processes fighting over shared resources
+- **Serialization overhead** — converting large objects to/from JSON/Protobuf on hot paths
+- **Slow algorithms** — O(n²) where O(n log n) would suffice
+- **Memory leaks** — gradual memory growth causing GC pauses or OOM crashes
 
 ---
 
@@ -143,18 +143,6 @@
 | ⏳ Microseconds (µs) | 1 – 999 µs | SSD reads, compression, in-DC network |
 | 🐢 Milliseconds (ms) | 1 – 999 ms | HDD, cross-region calls, LLM tokens |
 | 🚀 Seconds+ | 1 s – minutes | Full LLM responses, deep-space comms |
-
----
-
-### 🔥 Key Mental Models
-
-- **RAM is 200× faster than L1 cache is to HDD seek** — cache-friendly data access patterns matter enormously
-- **An SSD is not a RAM replacement** — 1 MB sequential: RAM = 250 µs, SSD = 1 ms, HDD = 30 ms
-- **Same-DC round trip (500 µs) vs cross-continent (150 ms)** — co-locate services that talk to each other frequently
-- **A single frontier LLM call can cost 1–30 seconds** — never put it on a synchronous user-facing request path without streaming or async design
-- **Mutex contention (25 ns) × millions of ops = real bottleneck** — design lock-free paths for hot code
-
-> Credit: Original numbers by Jeff Dean (Google) and Peter Norvig. LLM entries updated for 2026 hardware and model landscape.
 
 ---
 
