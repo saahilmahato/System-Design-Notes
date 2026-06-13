@@ -11,7 +11,7 @@ In distributed systems, **you cannot guarantee both strong consistency and high 
 | **Failure mode** | Returns error / timeout | Returns outdated data |
 | **Recovery** | Clean — nodes re-sync before serving | Complex — conflicting writes must be reconciled |
 
-> **P is not a choice.** Networks partition. Every real distributed system must tolerate partitions. The only actual choice is C vs A when a partition occurs.
+**P is not a choice.** Networks partition. Every real distributed system must tolerate partitions. The only actual choice is C vs A when a partition occurs.
 
 ---
 

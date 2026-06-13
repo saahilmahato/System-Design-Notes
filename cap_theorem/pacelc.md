@@ -6,8 +6,8 @@
 
 Proposed by **Daniel J. Abadi** (2010), PACELC states:
 
-> If there is a **P**artition, choose between **A**vailability and **C**onsistency (like CAP);  
-> **E**lse (normal operation), choose between **L**atency and **C**onsistency.
+If there is a **P**artition, choose between **A**vailability and **C**onsistency (like CAP);  
+**E**lse (normal operation), choose between **L**atency and **C**onsistency.
 
 ```
 P → A/C tradeoff   (during failure)

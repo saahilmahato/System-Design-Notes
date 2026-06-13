@@ -20,7 +20,7 @@ The **CAP Theorem** (Brewer's Theorem) states that any distributed system provid
 - Therefore, **P is not optional** — every distributed system must tolerate partitions.
 - This reduces the real choice to: **CP or AP** during a partition event.
 
-> "You cannot build a network that is both 100% available and 100% consistent once you distribute it across machines."
+> "You cannot build a system that is both 100% available and 100% consistent once you distribute it across machines."
 
 ---
 
