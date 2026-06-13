@@ -31,9 +31,9 @@
 
 ## The Manufacturing Analogy
 
-> A car factory takes **8 hours** to build one car but produces **120 cars/day**.
-> - **Latency** = 8 hours (time for one unit of work)
-> - **Throughput** = 120 cars/day = **5 cars/hour**
+A car factory takes **8 hours** to build one car but produces **120 cars/day**.
+- **Latency** = 8 hours (time for one unit of work)
+- **Throughput** = 120 cars/day = **5 cars/hour**
 
 The key insight: even though each car takes 8 hours, many cars are being built **simultaneously** in parallel stages. **Pipelining and parallelism decouple latency from throughput.**
 

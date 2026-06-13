@@ -31,20 +31,20 @@ Memorize these. They provide the mental model for every performance decision you
 
 | Operation | Latency | Relative to L1 Cache |
 |---|---|---|
-| L1 cache reference | ~1 ns | 1x |
-| Branch misprediction | ~5 ns | 5x |
-| L2 cache reference | ~4 ns | 4x |
-| L3 cache reference | ~40 ns | 40x |
-| Mutex lock/unlock | ~25 ns | 25x |
-| Main memory (RAM) access | ~100 ns | 100x |
-| Compress 1KB (Snappy) | ~3 µs | 3,000x |
-| Read 4KB from SSD | ~150 µs | 150,000x |
-| Read 1MB sequentially from RAM | ~250 µs | 250,000x |
-| Read 1MB sequentially from SSD | ~1 ms | 1,000,000x |
-| Disk seek (HDD) | ~10 ms | 10,000,000x |
-| Same datacenter round-trip | ~0.5 ms | 500,000x |
-| TCP packet CA → Netherlands | ~150 ms | 150,000,000x |
-| TCP packet CA → Australia | ~300 ms | 300,000,000x |
+| L1 cache reference | ~0.5 ns | 1x |
+| Branch misprediction | ~5 ns | 10x |
+| L2 cache reference | ~7 ns | 14x |
+| L3 cache reference | ~20 ns | 40x |
+| Mutex lock/unlock | ~25 ns | 50x |
+| Main memory (RAM) access | ~100 ns | 200x |
+| Compress 1KB (Snappy) | ~3 µs | 6,000x |
+| Read 4KB from SSD | ~150 µs | 300,000x |
+| Read 1MB sequentially from RAM | ~250 µs | 500,000x |
+| Read 1MB sequentially from SSD | ~1 ms | 2,000,000x |
+| Disk seek (HDD) | ~10 ms | 20,000,000x |
+| Same datacenter round-trip | ~0.5 ms | 1,000,000x |
+| TCP packet CA → Netherlands | ~150 ms | 300,000,000x |
+| TCP packet CA → Australia | ~300 ms | 600,000,000x |
 
 ### Key Takeaways from These Numbers
 - RAM is **100x faster** than SSD, which is **100x faster** than HDD.
