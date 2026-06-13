@@ -313,7 +313,7 @@ Else (E):         trade off Latency (L) vs Consistency (C)
 
 ---
 
-## The Golden Summary
+## Summary
 
 | Scenario | Optimize For | Approach |
 |---|---|---|
@@ -324,4 +324,4 @@ Else (E):         trade off Latency (L) vs Consistency (C)
 | Databases | Both, with explicit trade-offs | Read replicas, sharding, pooling, indexing |
 | Microservices | Latency on critical path, throughput via async | Parallelize calls, queue non-critical work |
 
-> **The engineering discipline is not choosing latency OR throughput. It is setting explicit SLOs for both, finding the bottleneck, and making deliberate trade-offs in service of your system's actual goals.**
+**The engineering discipline is not choosing latency OR throughput. It is setting explicit SLOs for both, finding the bottleneck, and making deliberate trade-offs in service of your system's actual goals.**
