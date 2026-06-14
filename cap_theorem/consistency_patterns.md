@@ -290,23 +290,6 @@ Weaker = higher availability, lower latency, risk of stale reads
 
 ---
 
-## Consistency vs. Availability: The CAP Theorem
-
-A distributed system can guarantee at most **two** of the following three properties simultaneously.
-
-| Property | Meaning |
-|---|---|
-| **C**onsistency | Every read receives the most recent write or an error |
-| **A**vailability | Every request receives a response (not necessarily the latest data) |
-| **P**artition Tolerance | The system continues operating despite network partitions |
-
-Since network partitions are a reality, the practical trade-off is **CP vs AP**:
-
-- **CP systems** (e.g., HBase, ZooKeeper, etcd): Sacrifice availability during partitions to maintain consistency.
-- **AP systems** (e.g., Cassandra, DynamoDB, CouchDB): Remain available during partitions but may serve stale data.
-
----
-
 ## Tunable Consistency
 
 Some databases allow you to configure the consistency level per operation using **quorum reads and writes**.

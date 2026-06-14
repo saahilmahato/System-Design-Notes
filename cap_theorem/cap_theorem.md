@@ -115,18 +115,6 @@ CAP only forces a tradeoff **during a partition event**. During normal operation
 
 ---
 
-## CAP vs FLP
-
-| | CAP | FLP |
-|---|---|---|
-| **Authors** | Brewer, Gilbert, Lynch | Fischer, Lynch, Patterson |
-| **Topic** | Read-write storage in distributed systems | Consensus (agreement) in distributed systems |
-| **Failure model** | Network partitions (message loss) | One potentially failed node, no message loss |
-| **Result** | Can't have C + A + P | Consensus is unsolvable in async networks with one failure |
-| **Relationship** | Different problems, different models; not directly related |
-
----
-
 ## Practical Intuition (The "Remembrance Inc" Analogy)
 
 Imagine a phone-based memory service run by two people (you and your wife):
