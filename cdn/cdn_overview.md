@@ -10,6 +10,8 @@ A **Content Delivery Network (CDN)** is a globally distributed network of proxy 
 - CDNs serve **static content** (HTML, CSS, JS, images, video, fonts, binaries) by default; modern CDNs like CloudFront and Fastly also support **dynamic content acceleration**
 - CDN operators pay ISPs and carriers to co-locate servers inside their data centers — edge nodes sit at the literal edge of the last mile
 
+![alt text](image.png)
+
 ---
 
 ## Why CDNs Exist: The Core Problems They Solve
@@ -43,6 +45,14 @@ User → DNS → Edge Node (cache hit? serve)
               Origin Server → response propagates back and is cached
 ```
 
+### Global CDN Architecture
+
+![alt text](image-1.png)
+
+### Multi-Level CDN Cache
+
+![alt text](image-2.png)
+
 ---
 
 ## Two Fundamental CDN Models
@@ -55,8 +65,6 @@ User → DNS → Edge Node (cache hit? serve)
 | **Origin traffic** | Bursts on cache miss; redundant re-fetches on TTL expiry | Minimal; origin only contacted at publish time |
 | **Operational effort** | Low — URL rewrite + cache headers | Higher — explicit upload pipeline required |
 | **Best for** | High-traffic sites with unpredictable demand | Low-traffic or infrequently-updated assets |
-
-> See dedicated files: `cdn-pull.md` and `cdn-push.md`
 
 ---
 
