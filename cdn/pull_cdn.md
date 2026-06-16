@@ -10,6 +10,7 @@ A **Pull CDN** populates its cache lazily — on demand. Content stays on the or
 - The CDN inspects its cache on each request: **hit** → serve immediately; **miss** → fetch from origin, cache, then serve
 - How long a cached object lives is governed by **TTL** (Time-To-Live), set via HTTP `Cache-Control` headers or CDN-level configuration
 
+![alt text](image-3.png)
 ---
 
 ## How Pull CDN Works: Request Lifecycle
