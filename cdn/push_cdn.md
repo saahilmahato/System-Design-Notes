@@ -11,6 +11,7 @@ A **Push CDN** is pre-populated by the content operator. Instead of waiting for 
 - Content is on the CDN before any user requests it — **no cold-start miss**
 - The origin server is not contacted by the CDN; it is only the source from which the operator uploads
 
+![alt text](image-4.png)
 ---
 
 ## How Push CDN Works: Lifecycle
